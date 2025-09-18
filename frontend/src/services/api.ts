@@ -6,7 +6,10 @@ import axios from 'axios';
 import { FingerprintData } from './fingerprint';
 
 // Configure API base URL (update for production)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const defaultApiBaseUrl =
+  typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api';
+const rawApiBaseUrl = process.env.REACT_APP_API_URL || defaultApiBaseUrl;
+const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
