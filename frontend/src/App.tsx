@@ -12,7 +12,7 @@ import { DownloadManager } from './components/DownloadManager';
 import { apiService, UploadResponse, ConversionResponse, UsageLimits } from './services/api';
 import { fingerprintService, FingerprintData } from './services/fingerprint';
 
-type AppState = 'idle' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error';
+type AppState = 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error';
 
 function App() {
   const [state, setState] = useState<AppState>('idle');

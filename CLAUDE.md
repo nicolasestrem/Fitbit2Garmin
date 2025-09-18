@@ -74,3 +74,4 @@ Configured for Vercel serverless deployment:
 - `weight-*.json` - Google Takeout Fitbit export files
 - `Weight *.fit` - Generated Garmin-compatible output files
 - `docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md` - Technical conversion documentation
+- Use Vercel MCP Server extensively in this project to speed up development test debug process

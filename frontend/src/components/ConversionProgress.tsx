@@ -6,7 +6,7 @@ import React from 'react';
 import { CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface ConversionProgressProps {
-  status: 'idle' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error';
+  status: 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error';
   message?: string;
   progress?: number;
   error?: string;
@@ -24,6 +24,7 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
         return <CheckCircleIcon className="h-8 w-8 text-green-500" />;
       case 'error':
         return <ExclamationTriangleIcon className="h-8 w-8 text-red-500" />;
+      case 'loading':
       case 'uploading':
       case 'validating':
       case 'converting':
@@ -39,6 +40,7 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
         return 'text-green-700 bg-green-50 border-green-200';
       case 'error':
         return 'text-red-700 bg-red-50 border-red-200';
+      case 'loading':
       case 'uploading':
       case 'validating':
       case 'converting':
@@ -52,6 +54,8 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
     if (message) return message;
 
     switch (status) {
+      case 'loading':
+        return 'Connecting to server...';
       case 'uploading':
         return 'Uploading files...';
       case 'validating':
@@ -79,7 +83,7 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
           <h3 className="text-lg font-medium">{getStatusMessage()}</h3>
 
           {/* Progress bar for active operations */}
-          {(status === 'uploading' || status === 'validating' || status === 'converting') && (
+          {(status === 'loading' || status === 'uploading' || status === 'validating' || status === 'converting') && (
             <div className="mt-3">
               <div className="bg-white bg-opacity-50 rounded-full h-2">
                 <div
