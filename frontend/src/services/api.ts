@@ -11,7 +11,6 @@ const defaultApiBaseUrl =
 const rawApiBaseUrl = process.env.REACT_APP_API_URL || defaultApiBaseUrl;
 const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
 
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds timeout for file processing
