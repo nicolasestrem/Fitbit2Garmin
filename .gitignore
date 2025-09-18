@@ -9,6 +9,7 @@ __pycache__/
 .env.production.local
 
 # Build outputs
+build/
 frontend/build/
 backend/.vercel/
 .vercel/
