@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { FileUpload } from './components/FileUpload';
 import { ConversionProgress } from './components/ConversionProgress';
 import { DownloadManager } from './components/DownloadManager';
@@ -257,6 +258,7 @@ function App() {
         </div>
       </footer>
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }

@@ -28,7 +28,7 @@ class FingerprintService {
       const fingerprintData: FingerprintData = {
         fingerprint_hash: result.visitorId,
         user_agent: navigator.userAgent,
-        screen_resolution: `${screen.width}x${screen.height}`,
+        screen_resolution: `${window.screen.width}x${window.screen.height}`,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
 
@@ -40,7 +40,7 @@ class FingerprintService {
       const fallbackData = {
         ua: navigator.userAgent,
         lang: navigator.language,
-        screen: `${screen.width}x${screen.height}`,
+        screen: `${window.screen.width}x${window.screen.height}`,
         tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
         canvas: this.getCanvasFingerprint(),
       };
@@ -50,7 +50,7 @@ class FingerprintService {
       return {
         fingerprint_hash: fallbackHash,
         user_agent: navigator.userAgent,
-        screen_resolution: `${screen.width}x${screen.height}`,
+        screen_resolution: `${window.screen.width}x${window.screen.height}`,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
     }
