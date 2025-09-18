@@ -136,7 +136,7 @@ class ApiService {
       } else if (error.response?.status === 422) {
         // Validation error
         throw new Error(apiError?.error || 'Validation error. Please check your input.');
-      } else if (error.response?.status >= 500) {
+      } else if (error.response?.status && error.response.status >= 500) {
         // Server error
         throw new Error('Server error. Please try again later.');
       } else {
