@@ -11,5 +11,5 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from main import app
 
-# Vercel expects a variable named 'app' or 'handler'
-handler = app
+# Export the FastAPI app for Vercel
+app = app
