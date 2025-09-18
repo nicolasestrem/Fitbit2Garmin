@@ -5,12 +5,12 @@
 import axios from 'axios';
 import { FingerprintData } from './fingerprint';
 
-// Configure API base URL
-// Production: Call the backend Vercel project
-// Development: Use localhost backend
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://fitbit2garmin-nicolasestrems-projects.vercel.app'  // Backend project URL
-  : process.env.REACT_APP_API_URL || 'http://localhost:8000';  // Localhost for development
+// Configure API base URL (update for production)
+const defaultApiBaseUrl =
+  typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api';
+const rawApiBaseUrl = process.env.REACT_APP_API_URL || defaultApiBaseUrl;
+const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,
