@@ -9,15 +9,16 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { FileUpload } from './components/FileUpload';
 import { ConversionProgress } from './components/ConversionProgress';
 import { DownloadManager } from './components/DownloadManager';
-import { apiService, UploadResponse, ConversionResponse, UsageLimits } from './services/api';
+import { apiService, ConversionResponse, UsageLimits } from './services/api';
 import { fingerprintService, FingerprintData } from './services/fingerprint';
 
 type AppState = 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error';
 
+const wait = (durationMs: number) => new Promise<void>((resolve) => setTimeout(resolve, durationMs));
+
 function App() {
   const [state, setState] = useState<AppState>('idle');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadResponse, setUploadResponse] = useState<UploadResponse | null>(null);
   const [conversionResponse, setConversionResponse] = useState<ConversionResponse | null>(null);
   const [fingerprint, setFingerprint] = useState<FingerprintData | null>(null);
   const [usageLimits, setUsageLimits] = useState<UsageLimits | null>(null);
@@ -35,22 +36,22 @@ function App() {
         setFingerprint(fp);
 
         // Get usage limits with retry mechanism
-        let retryCount = 0;
         const maxRetries = 3;
 
-        while (retryCount < maxRetries) {
+        for (let attempt = 0; attempt < maxRetries; attempt += 1) {
           try {
             const limits = await apiService.getUsageLimits(fp.fingerprint_hash);
             setUsageLimits(limits);
             setState('idle');
             return; // Success, exit retry loop
           } catch (apiError) {
-            retryCount++;
-            if (retryCount >= maxRetries) {
+            const isLastAttempt = attempt === maxRetries - 1;
+            if (isLastAttempt) {
               throw apiError; // Give up after max retries
             }
             // Wait before retry (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+            const retryDelay = 1000 * (attempt + 1);
+            await wait(retryDelay);
           }
         }
       } catch (error) {
@@ -70,7 +71,6 @@ function App() {
 
   const resetState = () => {
     setState('idle');
-    setUploadResponse(null);
     setConversionResponse(null);
     setError('');
     setProgress(0);
@@ -97,7 +97,6 @@ function App() {
       setState('uploading');
       setProgress(20);
       const uploadResult = await apiService.uploadFiles(selectedFiles);
-      setUploadResponse(uploadResult);
 
       // Step 2: Validate files
       setState('validating');
@@ -308,9 +307,30 @@ function App() {
               Built by the community, for the community 🏃‍♂️💨
             </p>
             <div className="space-x-4">
-              <a href="#" className="hover:text-gray-700">Documentation</a>
-              <a href="#" className="hover:text-gray-700">Support</a>
-              <a href="#" className="hover:text-gray-700">Upgrade</a>
+              <a
+                href="https://github.com/nicolasestrems/Fitbit2Garmin#readme"
+                className="hover:text-gray-700"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Documentation
+              </a>
+              <a
+                href="https://github.com/nicolasestrems/Fitbit2Garmin/issues/new"
+                className="hover:text-gray-700"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Support
+              </a>
+              <a
+                href="https://github.com/sponsors/nicolasestrems"
+                className="hover:text-gray-700"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Upgrade
+              </a>
             </div>
           </div>
         </div>
