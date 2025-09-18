@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:fitbit2garmin.app)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

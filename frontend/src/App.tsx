@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { FileUpload } from './components/FileUpload';
 import { ConversionProgress } from './components/ConversionProgress';
 import { DownloadManager } from './components/DownloadManager';
@@ -27,14 +28,35 @@ function App() {
   useEffect(() => {
     const initializeFingerprint = async () => {
       try {
+        setState('loading');
+        setError('');
+
         const fp = await fingerprintService.getCachedFingerprint();
         setFingerprint(fp);
 
-        // Get usage limits
-        const limits = await apiService.getUsageLimits(fp.fingerprint_hash);
-        setUsageLimits(limits);
+        // Get usage limits with retry mechanism
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (retryCount < maxRetries) {
+          try {
+            const limits = await apiService.getUsageLimits(fp.fingerprint_hash);
+            setUsageLimits(limits);
+            setState('idle');
+            return; // Success, exit retry loop
+          } catch (apiError) {
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              throw apiError; // Give up after max retries
+            }
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
       } catch (error) {
         console.error('Failed to initialize fingerprint:', error);
+        setState('idle');
+        setError('Unable to connect to server. Please check your internet connection and try refreshing the page.');
       }
     };
 
@@ -133,14 +155,50 @@ function App() {
                       </span>
                     )}
                   </>
+                ) : state === 'loading' ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Connecting...
+                  </span>
                 ) : (
-                  'Loading...'
+                  'Ready'
                 )}
               </p>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <ExclamationTriangleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">
+                  {error}
+                </p>
+                {error.includes('connect to server') && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-sm text-red-600 hover:text-red-800 underline"
+                    >
+                      Try refreshing the page
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="space-y-8">

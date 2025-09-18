@@ -35,9 +35,11 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # Local development
-        "https://*.vercel.app",   # Vercel deployments
-        "*"                       # Allow all for now (tighten in production)
+        "http://localhost:3000",           # Local development
+        "https://*.vercel.app",            # Vercel deployments
+        "https://fitbit2garmin.app",       # Custom domain
+        "https://www.fitbit2garmin.app",   # Custom domain with www
+        "*"                                # Allow all for now (tighten in production)
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
