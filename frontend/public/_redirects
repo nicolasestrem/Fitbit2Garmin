@@ -1,5 +1,2 @@
-# SPA routing for React Router
+# SPA routing for React Router - Pages Functions will handle /api routes automatically
 /*    /index.html   200
-
-# API routes (if using Cloudflare Workers)
-/api/*  https://your-worker.your-subdomain.workers.dev/:splat  200
