@@ -61,7 +61,25 @@ npm start
 
 ## Deployment
 
-Designed for Vercel deployment with serverless functions.
+Cloudflare Pages + Functions
+
+- Root directory: `frontend`
+- Build command: `npm ci && npm run build`
+- Build output directory: `dist`
+- Functions directory: `frontend/functions`
+
+Routing
+
+- `frontend/public/_redirects`:
+  - `/api/*    /api/:splat   200`
+  - `/*        /index.html   200`
+- `frontend/public/_routes.json`:
+  - `{ "version": 1, "include": ["/api/*"], "exclude": [] }`
+
+Notes
+
+- TypeScript target is ES2020 to avoid ES5 downleveling issues during Functions bundling.
+- Functions dependencies are installed during `postbuild` via `cd functions && npm ci`.
 
 ---
 
