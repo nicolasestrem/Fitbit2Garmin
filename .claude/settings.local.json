@@ -10,7 +10,19 @@
       "mcp__vercel__get_deployment",
       "mcp__vercel__get_deployment_build_logs",
       "mcp__vercel__web_fetch_vercel_url",
+<<<<<<< Updated upstream
       "Bash(git config:*)"
+=======
+      "Bash(git config:*)",
+      "mcp__vercel__list_teams",
+      "Bash(node:*)",
+      "Bash(git commit:*)",
+      "mcp__vercel__search_vercel_documentation",
+      "mcp__vercel__get_access_to_vercel_url",
+      "mcp__cloudflare-bindings__set_active_account",
+      "Bash(git add:*)",
+      "mcp__cloudflare-bindings__workers_list"
+>>>>>>> Stashed changes
     ],
     "deny": [],
     "ask": []
