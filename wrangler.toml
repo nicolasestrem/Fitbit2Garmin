@@ -5,6 +5,10 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
+# Frontend API base URL used at build time by Vite. Set to your FastAPI backend
+# (e.g., "https://api.example.com/api") to route conversions to Python.
+# Leave as "/api" to call Cloudflare Pages Functions.
+VITE_API_URL = "/api"
 
 [[kv_namespaces]]
 binding = "RATE_LIMITS"

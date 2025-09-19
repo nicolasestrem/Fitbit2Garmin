@@ -134,6 +134,12 @@ Compatibility
 
 - `compatibility_flags = ["nodejs_compat"]` enables Node APIs required by some libraries (e.g., streams/buffer) when running in the Workers runtime.
 
+Environment & Secrets
+
+- Build-time vars come from `wrangler.toml` `[vars]` and are available to the Pages build and Functions runtime.
+  - `VITE_API_URL` controls where the React app sends API requests.
+- Secrets (encrypted) must be managed via Cloudflare Dashboard (Pages → Settings → Environment variables → Add secret) or `wrangler` secret commands.
+
 ## API Flow Implemented
 
 ```mermaid

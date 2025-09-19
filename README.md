@@ -72,9 +72,17 @@ Cloudflare Pages (frontend) + FastAPI (backend)
   - Run locally: `cd backend && python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --reload`
   - Deploy to your preferred Python host (e.g. Fly.io/Render/Cloud Run)
 
-Frontend → Backend API routing
+Environment & Routing
 
-- Preferred: set `VITE_API_URL` in the Pages project to your backend API (e.g. `https://api.example.com/api`). The frontend will call the backend directly and bypass Pages Functions.
+- Managed via `wrangler.toml` (Pages reads build-time vars from here; secrets stay in the Dashboard):
+  - `VITE_API_URL` — Frontend API base URL used by Vite at build time
+    - Example: `VITE_API_URL="https://your-backend.example.com/api"`
+    - Default in this repo: `"/api"` (calls Pages Functions)
+  - Runtime bindings (Functions):
+    - KV: `RATE_LIMITS`
+    - R2: `FILE_STORAGE`
+
+- Preferred: set `VITE_API_URL` in `wrangler.toml` to your FastAPI backend (e.g. `https://api.example.com/api`). The frontend will call the backend directly and bypass Pages Functions for conversion.
 - If you keep Pages Functions for upload/download, the convert endpoint returns 501 with guidance to use the Python backend.
 
 Notes
