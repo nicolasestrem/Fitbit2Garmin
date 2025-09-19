@@ -1,6 +1,6 @@
 /**
  * Cloudflare Pages Function to handle API routes
- * This will eventually replace the FastAPI backend
+ * This replaces the FastAPI backend with proper R2 storage
  */
 
 export async function onRequest(context) {
@@ -83,11 +83,10 @@ async function handleUsage(request, env, corsHeaders) {
     });
   }
 
-  // For now, return mock data
-  // TODO: Implement proper rate limiting with KV store
+  // For now, return mock data since fingerprint requirements are removed
   const usageData = {
     conversions_used: 0,
-    conversions_limit: 2,
+    conversions_limit: 99999,
     time_until_reset: 86400, // 24 hours in seconds
     can_convert: true
   };
@@ -108,15 +107,96 @@ async function handleUpload(request, env, corsHeaders) {
     });
   }
 
-  // For now, return a mock response
-  // TODO: Implement file upload handling
-  return new Response(JSON.stringify({
-    error: "Upload functionality not yet implemented",
-    message: "API migration in progress - please check back soon"
-  }), {
-    status: 501,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  try {
+    // Parse multipart form data
+    const formData = await request.formData();
+    const files = formData.getAll('files');
+
+    // Validate file count
+    if (files.length > 3) {
+      return new Response(JSON.stringify({
+        error: "Maximum 3 files allowed."
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (files.length === 0) {
+      return new Response(JSON.stringify({
+        error: "No files provided"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Generate upload ID
+    const uploadId = crypto.randomUUID();
+    const fileData = [];
+
+    // Process each file
+    for (const file of files) {
+      if (!file.name.endsWith('.json')) {
+        return new Response(JSON.stringify({
+          error: `Invalid file type: ${file.name}. Only .json files are supported.`
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Read and validate JSON
+      const content = await file.text();
+      try {
+        const jsonData = JSON.parse(content);
+        fileData.push({
+          filename: file.name,
+          data: jsonData
+        });
+
+        // Store file in R2
+        await env.FILE_STORAGE.put(`uploads/${uploadId}/${file.name}`, content, {
+          httpMetadata: {
+            contentType: 'application/json'
+          }
+        });
+      } catch (jsonError) {
+        return new Response(JSON.stringify({
+          error: `Invalid JSON in file: ${file.name}`
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Store metadata in KV
+    await env.RATE_LIMITS.put(`upload:${uploadId}`, JSON.stringify({
+      files: fileData.map(f => ({ filename: f.filename, size: JSON.stringify(f.data).length })),
+      timestamp: Date.now(),
+      status: 'uploaded'
+    }), { expirationTtl: 3600 }); // 1 hour expiration
+
+    return new Response(JSON.stringify({
+      upload_id: uploadId,
+      files_received: files.length,
+      message: `Successfully uploaded ${files.length} files`
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    return new Response(JSON.stringify({
+      error: "Upload failed",
+      details: error.message
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 async function handleValidate(request, env, corsHeaders) {
@@ -130,21 +210,195 @@ async function handleValidate(request, env, corsHeaders) {
 }
 
 async function handleConvert(request, env, corsHeaders) {
-  return new Response(JSON.stringify({
-    error: "Conversion functionality not yet implemented",
-    message: "API migration in progress - please check back soon"
-  }), {
-    status: 501,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({
+      error: "Method not allowed"
+    }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    const { upload_id } = await request.json();
+
+    if (!upload_id) {
+      return new Response(JSON.stringify({
+        error: "Upload ID required"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check if upload exists
+    const uploadMetadata = await env.RATE_LIMITS.get(`upload:${upload_id}`);
+    if (!uploadMetadata) {
+      return new Response(JSON.stringify({
+        error: "Upload ID not found"
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const metadata = JSON.parse(uploadMetadata);
+    const conversionId = crypto.randomUUID();
+    const convertedFiles = [];
+    let totalEntries = 0;
+
+    // Process each uploaded file
+    for (const fileInfo of metadata.files) {
+      try {
+        // Retrieve file from R2
+        const fileObj = await env.FILE_STORAGE.get(`uploads/${upload_id}/${fileInfo.filename}`);
+        if (!fileObj) {
+          throw new Error(`File not found: ${fileInfo.filename}`);
+        }
+
+        const content = await fileObj.text();
+        const jsonData = JSON.parse(content);
+
+        // Use the proper JavaScript FIT converter that mirrors the Python implementation
+        const { convertFitbitToGarmin } = require('./fit-converter.js');
+        const conversionResults = convertFitbitToGarmin([[fileInfo.filename, jsonData]]);
+        const [outputFilename, fitData] = conversionResults[0];
+
+        // Store converted file in R2
+        await env.FILE_STORAGE.put(`converted/${conversionId}/${outputFilename}`, fitData, {
+          httpMetadata: {
+            contentType: 'application/octet-stream'
+          }
+        });
+
+        convertedFiles.push(outputFilename);
+        totalEntries += jsonData.length;
+
+      } catch (fileError) {
+        console.error(`Error processing file ${fileInfo.filename}:`, fileError);
+        return new Response(JSON.stringify({
+          error: `Failed to process file: ${fileInfo.filename}`,
+          details: fileError.message
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Store conversion metadata
+    await env.RATE_LIMITS.put(`conversion:${conversionId}`, JSON.stringify({
+      upload_id: upload_id,
+      files: convertedFiles,
+      timestamp: Date.now(),
+      total_entries: totalEntries,
+      status: 'completed'
+    }), { expirationTtl: 7200 }); // 2 hours expiration
+
+    return new Response(JSON.stringify({
+      conversion_id: conversionId,
+      files_converted: convertedFiles.length,
+      total_entries: totalEntries,
+      download_urls: convertedFiles.map(filename => `/api/download/${conversionId}/${filename}`),
+      message: `Successfully converted ${convertedFiles.length} files`
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Conversion error:', error);
+    return new Response(JSON.stringify({
+      error: "Conversion failed",
+      details: error.message
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 }
 
+
 async function handleDownload(request, env, corsHeaders) {
-  return new Response(JSON.stringify({
-    error: "Download functionality not yet implemented",
-    message: "API migration in progress - please check back soon"
-  }), {
-    status: 501,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  if (request.method !== 'GET') {
+    return new Response(JSON.stringify({
+      error: "Method not allowed"
+    }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+
+    // Extract conversion_id and filename from /api/download/{conversion_id}/{filename}
+    if (pathParts.length < 5) {
+      return new Response(JSON.stringify({
+        error: "Invalid download URL format"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const conversionId = pathParts[3];
+    const filename = pathParts[4];
+
+    // Check if conversion exists
+    const conversionMetadata = await env.RATE_LIMITS.get(`conversion:${conversionId}`);
+    if (!conversionMetadata) {
+      return new Response(JSON.stringify({
+        error: "Conversion ID not found"
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const metadata = JSON.parse(conversionMetadata);
+
+    // Check if requested file exists in conversion
+    if (!metadata.files.includes(filename)) {
+      return new Response(JSON.stringify({
+        error: "File not found in conversion"
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Retrieve file from R2
+    const fileObj = await env.FILE_STORAGE.get(`converted/${conversionId}/${filename}`);
+    if (!fileObj) {
+      return new Response(JSON.stringify({
+        error: "File not found in storage"
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Return the file as a download
+    return new Response(fileObj.body, {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': fileObj.size.toString()
+      },
+    });
+
+  } catch (error) {
+    console.error('Download error:', error);
+    return new Response(JSON.stringify({
+      error: "Download failed",
+      details: error.message
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 }
