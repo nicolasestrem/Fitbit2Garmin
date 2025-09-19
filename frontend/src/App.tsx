@@ -283,37 +283,8 @@ function App() {
       <footer className="bg-white border-t mt-16">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between text-sm text-gray-500">
-            <p>
-              Built by the community, for the community 🏃‍♂️💨
-            </p>
-            <div className="space-x-4">
-              <a
-                href="https://github.com/nicolasestrems/Fitbit2Garmin#readme"
-                className="hover:text-gray-700"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Documentation
-              </a>
-              <a
-                href="https://github.com/nicolasestrems/Fitbit2Garmin/issues/new"
-                className="hover:text-gray-700"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Support
-              </a>
-              {/* Sponsor/upgrade link commented out
-              <a
-                href="https://github.com/sponsors/nicolasestrems"
-                className="hover:text-gray-700"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Upgrade
-              </a>
-              */}
-            </div>
+            <div />
+            <div />
           </div>
         </div>
       </footer>
