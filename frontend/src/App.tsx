@@ -25,41 +25,41 @@ function App() {
 
   // Initialize fingerprint on app load
   useEffect(() => {
-    const initializeFingerprint = async () => {
-      try {
-        setState('loading');
-        setError('');
+    // const initializeFingerprint = async () => {
+    //   try {
+    //     setState('loading');
+    //     setError('');
 
-        const fp = await fingerprintService.getCachedFingerprint();
-        setFingerprint(fp);
+    //     const fp = await fingerprintService.getCachedFingerprint();
+    //     setFingerprint(fp);
 
-        // Get usage limits with retry mechanism
-        const maxRetries = 3;
+    //     // Get usage limits with retry mechanism
+    //     const maxRetries = 3;
 
-        for (let attempt = 0; attempt < maxRetries; attempt += 1) {
-          try {
-            const limits = await apiService.getUsageLimits(fp.fingerprint_hash);
-            setUsageLimits(limits);
-            setState('idle');
-            return; // Success, exit retry loop
-          } catch (apiError) {
-            const isLastAttempt = attempt === maxRetries - 1;
-            if (isLastAttempt) {
-              throw apiError; // Give up after max retries
-            }
-            // Wait before retry (exponential backoff)
-            const retryDelay = 1000 * (attempt + 1);
-            await wait(retryDelay);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize fingerprint:', error);
-        setState('idle');
-        setError('Unable to connect to server. Please check your internet connection and try refreshing the page.');
-      }
-    };
+    //     for (let attempt = 0; attempt < maxRetries; attempt += 1) {
+    //       try {
+    //         const limits = await apiService.getUsageLimits(fp.fingerprint_hash);
+    //         setUsageLimits(limits);
+    //         setState('idle');
+    //         return; // Success, exit retry loop
+    //       } catch (apiError) {
+    //         const isLastAttempt = attempt === maxRetries - 1;
+    //         if (isLastAttempt) {
+    //           throw apiError; // Give up after max retries
+    //         }
+    //         // Wait before retry (exponential backoff)
+    //         const retryDelay = 1000 * (attempt + 1);
+    //         await wait(retryDelay);
+    //       }
+    //     }
+    //   } catch (error) {
+    //     console.error('Failed to initialize fingerprint:', error);
+    //     setState('idle');
+    //     setError('Unable to connect to server. Please check your internet connection and try refreshing the page.');
+    //   }
+    // };
 
-    initializeFingerprint();
+    // initializeFingerprint();
   }, []);
 
   const handleFilesSelected = (files: File[]) => {
@@ -80,10 +80,10 @@ function App() {
       return;
     }
 
-    if (!usageLimits?.can_convert) {
-      setError(`Daily limit exceeded. Used ${usageLimits?.conversions_used}/${usageLimits?.conversions_limit} conversions.`);
-      return;
-    }
+    // if (!usageLimits?.can_convert) {
+    //   setError(`Daily limit exceeded. Used ${usageLimits?.conversions_used}/${usageLimits?.conversions_limit} conversions.`);
+    //   return;
+    // }
 
     if (selectedFiles.length === 0) {
       setError('Please select files to convert.');
@@ -117,7 +117,7 @@ function App() {
     }
   };
 
-  const canConvert = selectedFiles.length > 0 && usageLimits?.can_convert && state === 'idle';
+  const canConvert = selectedFiles.length > 0 && state === 'idle';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,7 +133,7 @@ function App() {
                 Convert your Fitbit weight data to Garmin-compatible .fit files
               </p>
             </div>
-            <div className="text-right">
+            {/* <div className="text-right">
               <p className="text-sm text-gray-500">
                 {usageLimits ? (
                   <>
@@ -159,7 +159,7 @@ function App() {
                   'Ready'
                 )}
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
       </header>
@@ -239,7 +239,7 @@ function App() {
               </div>
 
               {/* Rate limit warning */}
-              {usageLimits && !usageLimits.can_convert && (
+              {/* {usageLimits && !usageLimits.can_convert && (
                 <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-sm text-yellow-800">
                     <span className="font-medium">Daily limit reached:</span>{' '}
@@ -249,7 +249,7 @@ function App() {
                     </span>
                   </p>
                 </div>
-              )}
+              )} */}
             </section>
           )}
 
@@ -316,14 +316,14 @@ function App() {
               >
                 Support
               </a>
-              <a
+              {/* <a
                 href="https://github.com/sponsors/nicolasestrems"
                 className="hover:text-gray-700"
                 target="_blank"
                 rel="noreferrer"
               >
                 Upgrade
-              </a>
+              </a> */}
             </div>
           </div>
         </div>

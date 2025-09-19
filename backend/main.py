@@ -59,28 +59,28 @@ async def root():
         "docs": "/docs"
     }
 
-@app.get("/usage/{fingerprint_hash}")
-async def get_usage_limits(
-    fingerprint_hash: str,
-    request: Request
-) -> UsageLimits:
-    """Get current usage limits for a user"""
-    try:
-        # Create fingerprint data from hash (simplified for this endpoint)
-        fingerprint_data = FingerprintData(
-            fingerprint_hash=fingerprint_hash,
-            user_agent=request.headers.get("user-agent", ""),
-            screen_resolution="unknown",
-            timezone="unknown"
-        )
-
-        ip_address = request.client.host
-        usage_stats = fingerprint_manager.get_usage_stats(fingerprint_data, ip_address)
-
-        return UsageLimits(**usage_stats)
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving usage limits: {str(e)}")
+# @app.get("/usage/{fingerprint_hash}")
+# async def get_usage_limits(
+#     fingerprint_hash: str,
+#     request: Request
+# ) -> UsageLimits:
+#     """Get current usage limits for a user"""
+#     try:
+#         # Create fingerprint data from hash (simplified for this endpoint)
+#         fingerprint_data = FingerprintData(
+#             fingerprint_hash=fingerprint_hash,
+#             user_agent=request.headers.get("user-agent", ""),
+#             screen_resolution="unknown",
+#             timezone="unknown"
+#         )
+#
+#         ip_address = request.client.host
+#         usage_stats = fingerprint_manager.get_usage_stats(fingerprint_data, ip_address)
+#
+#         return UsageLimits(**usage_stats)
+#
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error retrieving usage limits: {str(e)}")
 
 @app.post("/upload")
 async def upload_files(
@@ -89,7 +89,7 @@ async def upload_files(
 ) -> UploadResponse:
     """
     Upload Google Takeout weight JSON files
-    Maximum 2 files for free tier
+    Maximum 2 files
     """
     try:
         # Validate file count
@@ -156,23 +156,23 @@ async def convert_files(
             raise HTTPException(status_code=404, detail="Upload ID not found")
 
         # Rate limiting check
-        ip_address = request.client.host
-        can_proceed, usage_record = fingerprint_manager.check_rate_limit(
-            conversion_request.fingerprint, ip_address
-        )
+        # ip_address = request.client.host
+        # can_proceed, usage_record = fingerprint_manager.check_rate_limit(
+        #     conversion_request.fingerprint, ip_address
+        # )
 
-        if not can_proceed:
-            raise HTTPException(
-                status_code=429,
-                detail=f"Daily limit exceeded. Used {usage_record.conversions_count}/2 conversions."
-            )
+        # if not can_proceed:
+        #     raise HTTPException(
+        #         status_code=429,
+        #         detail=f"Daily limit exceeded. Used {usage_record.conversions_count}/2 conversions."
+        #     )
 
-        # Detect suspicious activity
-        if fingerprint_manager.detect_suspicious_activity(ip_address):
-            raise HTTPException(
-                status_code=429,
-                detail="Suspicious activity detected. Please try again later."
-            )
+        # # Detect suspicious activity
+        # if fingerprint_manager.detect_suspicious_activity(ip_address):
+        #     raise HTTPException(
+        #         status_code=429,
+        #         detail="Suspicious activity detected. Please try again later."
+        #     )
 
         # Get uploaded file data
         file_data = get_uploaded_files()[conversion_request.upload_id]
@@ -190,7 +190,7 @@ async def convert_files(
         get_converted_files()[conversion_id] = converted_results
 
         # Record successful conversion
-        fingerprint_manager.record_conversion(conversion_request.fingerprint, ip_address)
+        # fingerprint_manager.record_conversion(conversion_request.fingerprint, ip_address)
 
         # Generate download URLs
         download_urls = []

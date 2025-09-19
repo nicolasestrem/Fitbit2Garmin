@@ -86,15 +86,15 @@ class ApiService {
     }
   }
 
-  async getUsageLimits(fingerprintHash: string): Promise<UsageLimits> {
-    try {
-      const response = await api.get(`/usage/${fingerprintHash}`);
-      return response.data;
-    } catch (error) {
-      this.handleApiError(error);
-      throw error;
-    }
-  }
+  // async getUsageLimits(fingerprintHash: string): Promise<UsageLimits> {
+  //   try {
+  //     const response = await api.get(`/usage/${fingerprintHash}`);
+  //     return response.data;
+  //   } catch (error) {
+  //     this.handleApiError(error);
+  //     throw error;
+  //   }
+  // }
 
   getDownloadUrl(conversionId: string, filename: string): string {
     return `${API_BASE_URL}/download/${conversionId}/${filename}`;
