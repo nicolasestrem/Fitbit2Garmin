@@ -39,8 +39,6 @@ app.add_middleware(
         "http://localhost:3000",                    # Local development
         "https://fitbit2garmin.app",                # Custom domain
         "https://www.fitbit2garmin.app",            # Custom domain with www
-        "https://fitbit2-garmin.vercel.app",        # Vercel deployment
-        "https://fitbit2-garmin-nicolasestrems-projects.vercel.app"  # Specific Vercel URL
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
