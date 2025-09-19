@@ -31,7 +31,8 @@
       "mcp__cloudflare-bindings__r2_bucket_create",
       "WebFetch(domain:developer.garmin.com)",
       "WebSearch",
-      "Bash(npm init:*)"
+      "Bash(npm init:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
