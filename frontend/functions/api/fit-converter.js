@@ -6,9 +6,24 @@
  * proper binary format, CRC calculations, and message structure.
  */
 
-// Import the official Garmin FIT SDK
-import FitSDK from '@garmin/fitsdk';
-const { MesgNum } = FitSDK.Profile;
+// Defer importing the Garmin FIT SDK until runtime to avoid build-time ESM/CJS issues
+let MesgNum;
+let FitEncoder;
+let FitStream;
+
+async function ensureFitSdk() {
+  if (MesgNum && FitEncoder && FitStream) return;
+  const mod = await import('@garmin/fitsdk');
+  const ns = mod.default ? mod.default : mod;
+  // Support both namespace and named exports
+  const Profile = ns.Profile || mod.Profile;
+  MesgNum = Profile?.MesgNum || (Profile && Profile.MesgNum);
+  FitEncoder = ns.Encoder || mod.Encoder;
+  FitStream = ns.Stream || mod.Stream;
+  if (!MesgNum || !FitEncoder || !FitStream) {
+    throw new Error('Garmin FIT SDK not available in this environment');
+  }
+}
 
 class FitbitConverter {
   constructor() {
@@ -77,7 +92,8 @@ class FitbitConverter {
   /**
    * Process JSON data and return FIT file bytes - mirrors Python exactly
    */
-  processJsonData(jsonData, filename) {
+  async processJsonData(jsonData, filename) {
+    await ensureFitSdk();
     if (!this.validateGoogleTakeoutFormat(jsonData)) {
       throw new Error('Invalid Google Takeout format. Expected weight data with logId, weight, date, time fields.');
     }
@@ -101,11 +117,11 @@ class FitbitConverter {
     }
 
     // Create FIT file encoder using official SDK
-    const encoder = new FitSDK.Encoder();
+    const encoder = new FitEncoder();
     const fitData = [];
 
     // Capture encoded data using FitSDK Stream
-    const stream = new FitSDK.Stream();
+    const stream = new FitStream();
     stream.onData = (data) => {
       fitData.push(...Array.from(data));
     };
@@ -204,13 +220,13 @@ class FitbitConverter {
  * Convert multiple Fitbit JSON files to Garmin FIT format
  * This mirrors convert_fitbit_to_garmin() from Python exactly
  */
-function convertFitbitToGarmin(jsonFiles) {
+async function convertFitbitToGarmin(jsonFiles) {
   const converter = new FitbitConverter();
   const results = [];
 
   for (const [filename, jsonData] of jsonFiles) {
     try {
-      const result = converter.processJsonData(jsonData, filename);
+      const result = await converter.processJsonData(jsonData, filename);
       results.push([result.filename, result.fitBytes]);
 
       console.log(`Converted ${filename}: ${result.entryCount} weight entries → ${result.filename}`);

@@ -263,7 +263,7 @@ async function handleConvert(request, env, corsHeaders) {
         const jsonData = JSON.parse(content);
 
         // Use the proper JavaScript FIT converter that mirrors the Python implementation
-        const conversionResults = convertFitbitToGarmin([[fileInfo.filename, jsonData]]);
+        const conversionResults = await convertFitbitToGarmin([[fileInfo.filename, jsonData]]);
         const [outputFilename, fitData] = conversionResults[0];
 
         // Store converted file in R2
