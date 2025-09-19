@@ -75,3 +75,13 @@ The application consists of a Python FastAPI backend and a React frontend.
 *   **Backend:** The backend code follows a standard FastAPI structure. It uses Pydantic models for data validation and has a clear separation of concerns between the API endpoints and the conversion logic.
 *   **Frontend:** The frontend is a modern React application using functional components and hooks. It uses TypeScript for type safety and Tailwind CSS for styling. The code is organized into components and services.
 *   **API:** The API is versioned (v1) and includes endpoints for uploading, validating, converting, and downloading files. It also has a usage endpoint to check the rate-limiting status.
+
+## Configuration
+
+### Daily Conversion Limit
+
+The daily conversion limit is defined in the `backend/fingerprint.py` file. To change the limit, modify the `DAILY_LIMIT` variable:
+
+```python
+DAILY_LIMIT = 2  # Free tier: 2 conversions per day
+```
