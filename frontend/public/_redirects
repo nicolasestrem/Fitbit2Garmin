@@ -1,2 +1,5 @@
+# Ensure API requests hit Pages Functions, not the SPA
+/api/*    /api/:splat   200
+
 # SPA routing for React Router
-/*    /index.html   200
+/*         /index.html   200
