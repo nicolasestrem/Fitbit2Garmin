@@ -43,6 +43,7 @@ pages_build_output_dir = "dist"
 
 # AFTER
 pages_build_output_dir = "frontend/dist"
+compatibility_flags = ["nodejs_compat"]
 
 # ADDED R2 bucket binding
 [[r2_buckets]]
@@ -150,7 +151,7 @@ class FitbitConverter {
 
 ```bash
 # 1. Build frontend
-cd frontend && npm run build
+cd frontend && npm ci && npm run build
 
 # 2. Copy functions to deploy directory
 cp -r functions frontend/dist/
@@ -158,6 +159,22 @@ cp -r functions frontend/dist/
 # 3. Deploy to Cloudflare Pages
 npx wrangler pages deploy frontend/dist --project-name fitbit2garmin --commit-dirty=true
 ```
+
+Pages project settings (GUI)
+
+- Root directory: `frontend`
+- Build command: `npm ci && npm run build`
+- Build output directory: `dist`
+- Functions directory: `frontend/functions`
+
+Bindings
+
+- KV: `RATE_LIMITS` (via wrangler.toml or Dashboard → Pages → Functions → KV)
+- R2: `FILE_STORAGE` bound to bucket `fitbit2garmin-files` (wrangler.toml or Dashboard → Pages → Functions → R2 bindings)
+
+Compatibility
+
+- `compatibility_flags = ["nodejs_compat"]` enables Node APIs required by some libraries (e.g., streams/buffer) when running in the Workers runtime.
 
 ## API Flow Implemented
 

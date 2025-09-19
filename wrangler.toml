@@ -1,6 +1,7 @@
 name = "fitbit2garmin"
 pages_build_output_dir = "frontend/dist"
 compatibility_date = "2023-12-01"
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
