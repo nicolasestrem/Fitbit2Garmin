@@ -67,11 +67,29 @@ binding = "RATE_LIMITS"
 id = "cdaa358255684b39b8f9429dab347cec"
 ```
 
-### _redirects
+### Routing fixes
+
+To ensure API requests are handled by Cloudflare Pages Functions and not the SPA, two routing files are required:
+
+1) `_redirects` (copied to the build output)
 ```
-# SPA routing for React Router - Pages Functions will handle /api routes automatically
-/*    /index.html   200
+# Ensure API requests hit Pages Functions first
+/api/*    /api/:splat   200
+
+# SPA routing for React Router
+/*         /index.html   200
 ```
+
+2) `_routes.json` (placed alongside the static assets)
+```
+{
+  "version": 1,
+  "include": ["/api/*"],
+  "exclude": []
+}
+```
+
+Previously, the catch‑all SPA rule caused `/api/*` to be rewritten to `/index.html`. The above configuration ensures `/api/*` is evaluated as a function route and the SPA receives everything else.
 
 ## Next Steps for Full Functionality
 
