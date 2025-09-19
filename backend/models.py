@@ -25,7 +25,6 @@ class UploadResponse(BaseModel):
 class ConversionRequest(BaseModel):
     """Request to convert uploaded files"""
     upload_id: str = Field(..., description="Upload identifier from upload response")
-    fingerprint: FingerprintData = Field(..., description="Browser fingerprint")
 
 
 class ConversionResponse(BaseModel):

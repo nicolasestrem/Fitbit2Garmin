@@ -7,8 +7,7 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { FileUpload } from './components/FileUpload';
 import { ConversionProgress } from './components/ConversionProgress';
 import { DownloadManager } from './components/DownloadManager';
-import { apiService, ConversionResponse, UsageLimits } from './services/api';
-import { fingerprintService, FingerprintData } from './services/fingerprint';
+import { apiService, ConversionResponse } from './services/api';
 
 type AppState = 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error';
 
@@ -18,8 +17,6 @@ function App() {
   const [state, setState] = useState<AppState>('idle');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [conversionResponse, setConversionResponse] = useState<ConversionResponse | null>(null);
-  const [fingerprint, setFingerprint] = useState<FingerprintData | null>(null);
-  const [usageLimits, setUsageLimits] = useState<UsageLimits | null>(null);
   const [error, setError] = useState<string>('');
   const [progress, setProgress] = useState<number>(0);
 
@@ -75,16 +72,6 @@ function App() {
   };
 
   const handleConvert = async () => {
-    if (!fingerprint) {
-      setError('Fingerprint not ready. Please try again.');
-      return;
-    }
-
-    // if (!usageLimits?.can_convert) {
-    //   setError(`Daily limit exceeded. Used ${usageLimits?.conversions_used}/${usageLimits?.conversions_limit} conversions.`);
-    //   return;
-    // }
-
     if (selectedFiles.length === 0) {
       setError('Please select files to convert.');
       return;
@@ -99,16 +86,13 @@ function App() {
       // Step 2: Convert files
       setState('converting');
       setProgress(60);
-      const conversionResult = await apiService.convertFiles(uploadResult.upload_id, fingerprint);
+      const conversionResult = await apiService.convertFiles(uploadResult.upload_id);
       setConversionResponse(conversionResult);
 
       // Step 4: Complete
       setProgress(100);
       setState('completed');
 
-      // Update usage limits
-      const updatedLimits = await apiService.getUsageLimits(fingerprint.fingerprint_hash);
-      setUsageLimits(updatedLimits);
 
     } catch (error) {
       console.error('Conversion failed:', error);
