@@ -72,11 +72,10 @@ class ApiService {
 
 
 
-  async convertFiles(uploadId: string, fingerprint: FingerprintData): Promise<ConversionResponse> {
+  async convertFiles(uploadId: string): Promise<ConversionResponse> {
     try {
       const response = await api.post('/convert', {
         upload_id: uploadId,
-        fingerprint: fingerprint,
       });
 
       return response.data;

@@ -24,7 +24,9 @@
       "WebFetch(domain:8559886d.fitbit2garmin.pages.dev)",
       "WebFetch(domain:c0c5705c.fitbit2garmin.pages.dev)",
       "Bash(npm uninstall:*)",
-      "WebFetch(domain:54280952.fitbit2garmin.pages.dev)"
+      "WebFetch(domain:54280952.fitbit2garmin.pages.dev)",
+      "Bash(git checkout:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
