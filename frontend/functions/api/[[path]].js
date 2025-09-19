@@ -278,11 +278,14 @@ async function handleConvert(request, env, corsHeaders) {
 
       } catch (fileError) {
         console.error(`Error processing file ${fileInfo.filename}:`, fileError);
+        const msg = (fileError && fileError.message) ? String(fileError.message) : 'Unknown error';
+        const isSdkIssue = msg.toLowerCase().includes('garmin fit sdk') || msg.toLowerCase().includes('fitsdk');
         return new Response(JSON.stringify({
           error: `Failed to process file: ${fileInfo.filename}`,
-          details: fileError.message
+          details: msg,
+          error_code: isSdkIssue ? 'SDK_UNAVAILABLE' : 'CONVERT_FAILED'
         }), {
-          status: 500,
+          status: isSdkIssue ? 501 : 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
