@@ -6,10 +6,7 @@ import axios from 'axios';
 import { FingerprintData } from './fingerprint';
 
 // Configure API base URL (update for production)
-const defaultApiBaseUrl =
-  typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api';
-const rawApiBaseUrl = process.env.REACT_APP_API_URL || defaultApiBaseUrl;
-const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 
 const api = axios.create({
@@ -73,18 +70,7 @@ class ApiService {
     }
   }
 
-  async validateFiles(uploadId: string): Promise<FileValidationResult[]> {
-    try {
-      const response = await api.post('/validate', null, {
-        params: { upload_id: uploadId },
-      });
 
-      return response.data;
-    } catch (error) {
-      this.handleApiError(error);
-      throw error;
-    }
-  }
 
   async convertFiles(uploadId: string, fingerprint: FingerprintData): Promise<ConversionResponse> {
     try {

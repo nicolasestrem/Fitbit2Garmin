@@ -11,6 +11,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
 from pydantic import ValidationError
+from storage import get_uploaded_files, get_converted_files
 
 from models import (
     FingerprintData,
@@ -46,9 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory storage for uploaded files (use Redis/DB in production)
-uploaded_files: Dict[str, List[Dict[str, Any]]] = {}
-converted_files: Dict[str, List[tuple]] = {}
+
 
 @app.get("/")
 async def root():
@@ -130,7 +129,7 @@ async def upload_files(
                 )
 
         # Store uploaded data
-        uploaded_files[upload_id] = file_data
+        get_uploaded_files()[upload_id] = file_data
 
         return UploadResponse(
             upload_id=upload_id,
@@ -143,70 +142,7 @@ async def upload_files(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-@app.post("/validate")
-async def validate_files(
-    upload_id: str,
-    request: Request
-) -> List[FileValidationResult]:
-    """Validate uploaded files format"""
-    try:
-        if upload_id not in uploaded_files:
-            raise HTTPException(status_code=404, detail="Upload ID not found")
 
-        file_data = uploaded_files[upload_id]
-        validation_results = []
-
-        for file_info in file_data:
-            filename = file_info["filename"]
-            data = file_info["data"]
-
-            try:
-                # Basic validation
-                if not isinstance(data, list) or not data:
-                    validation_results.append(FileValidationResult(
-                        filename=filename,
-                        is_valid=False,
-                        error_message="File must contain an array of weight entries"
-                    ))
-                    continue
-
-                # Check for required fields
-                first_entry = data[0]
-                required_fields = ['logId', 'weight', 'date', 'time']
-                missing_fields = [field for field in required_fields if field not in first_entry]
-
-                if missing_fields:
-                    validation_results.append(FileValidationResult(
-                        filename=filename,
-                        is_valid=False,
-                        error_message=f"Missing required fields: {', '.join(missing_fields)}"
-                    ))
-                    continue
-
-                # Extract date range
-                dates = [entry.get('date', '') for entry in data]
-                date_range = f"{dates[0]} to {dates[-1]}" if dates else "Unknown"
-
-                validation_results.append(FileValidationResult(
-                    filename=filename,
-                    is_valid=True,
-                    entry_count=len(data),
-                    date_range=date_range
-                ))
-
-            except Exception as e:
-                validation_results.append(FileValidationResult(
-                    filename=filename,
-                    is_valid=False,
-                    error_message=f"Validation error: {str(e)}"
-                ))
-
-        return validation_results
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
 @app.post("/convert")
 async def convert_files(
@@ -216,7 +152,7 @@ async def convert_files(
     """Convert uploaded files to Garmin .fit format"""
     try:
         # Check upload exists
-        if conversion_request.upload_id not in uploaded_files:
+        if conversion_request.upload_id not in get_uploaded_files():
             raise HTTPException(status_code=404, detail="Upload ID not found")
 
         # Rate limiting check
@@ -239,7 +175,7 @@ async def convert_files(
             )
 
         # Get uploaded file data
-        file_data = uploaded_files[conversion_request.upload_id]
+        file_data = get_uploaded_files()[conversion_request.upload_id]
 
         # Prepare data for conversion
         json_files = []
@@ -251,7 +187,7 @@ async def convert_files(
 
         # Generate conversion ID and store results
         conversion_id = str(uuid.uuid4())
-        converted_files[conversion_id] = converted_results
+        get_converted_files()[conversion_id] = converted_results
 
         # Record successful conversion
         fingerprint_manager.record_conversion(conversion_request.fingerprint, ip_address)
@@ -283,11 +219,11 @@ async def convert_files(
 async def download_file(conversion_id: str, filename: str):
     """Download a converted .fit file"""
     try:
-        if conversion_id not in converted_files:
+        if conversion_id not in get_converted_files():
             raise HTTPException(status_code=404, detail="Conversion ID not found")
 
         # Find the requested file
-        for output_filename, fit_bytes in converted_files[conversion_id]:
+        for output_filename, fit_bytes in get_converted_files()[conversion_id]:
             if output_filename == filename:
                 return Response(
                     content=fit_bytes,

@@ -96,12 +96,7 @@ function App() {
       setProgress(20);
       const uploadResult = await apiService.uploadFiles(selectedFiles);
 
-      // Step 2: Validate files
-      setState('validating');
-      setProgress(40);
-      await apiService.validateFiles(uploadResult.upload_id);
-
-      // Step 3: Convert files
+      // Step 2: Convert files
       setState('converting');
       setProgress(60);
       const conversionResult = await apiService.convertFiles(uploadResult.upload_id, fingerprint);

@@ -7,6 +7,9 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 from models import FingerprintData, UsageRecord
+from storage import get_usage_records
+
+DAILY_LIMIT = 2  # Free tier: 2 conversions per day
 
 
 class FingerprintManager:
@@ -14,10 +17,10 @@ class FingerprintManager:
 
     def __init__(self):
         # In-memory storage for demo (use Redis/DB in production)
-        self.usage_records: Dict[str, UsageRecord] = {}
-        self.daily_limit = 2  # Free tier: 2 conversions per day
+        self.usage_records: Dict[str, UsageRecord] = get_usage_records()
+        self.daily_limit = DAILY_LIMIT
 
-    def generate_composite_fingerprint(self, fingerprint_data: FingerprintData, ip_address: str) -> str:
+    def generate_composite_fingerprint(self, fingerprint_data: FingerprintData) -> str:
         """Generate a composite fingerprint hash"""
         # Combine multiple data points for robust fingerprinting
         composite_data = {
@@ -25,7 +28,6 @@ class FingerprintManager:
             "user_agent": fingerprint_data.user_agent,
             "screen": fingerprint_data.screen_resolution,
             "timezone": fingerprint_data.timezone,
-            # Don't include IP in fingerprint to allow legitimate users on same network
         }
 
         # Create deterministic hash
@@ -38,8 +40,7 @@ class FingerprintManager:
 
         Returns:
             (can_proceed, usage_record)
-        """
-        fingerprint_hash = self.generate_composite_fingerprint(fingerprint_data, ip_address)
+        fingerprint_hash = self.generate_composite_fingerprint(fingerprint_data)
 
         # Get existing usage record or create new one
         if fingerprint_hash in self.usage_records:
@@ -68,7 +69,7 @@ class FingerprintManager:
 
     def record_conversion(self, fingerprint_data: FingerprintData, ip_address: str) -> UsageRecord:
         """Record a successful conversion"""
-        fingerprint_hash = self.generate_composite_fingerprint(fingerprint_data, ip_address)
+        fingerprint_hash = self.generate_composite_fingerprint(fingerprint_data)
 
         if fingerprint_hash in self.usage_records:
             usage_record = self.usage_records[fingerprint_hash]
@@ -130,9 +131,9 @@ class FingerprintManager:
         # Flag if more than 3 different fingerprints from same IP in 1 hour
         return len(recent_fingerprints) > 3
 
-    def get_fingerprint_hash(self, fingerprint_data: FingerprintData, ip_address: str) -> str:
+    def get_fingerprint_hash(self, fingerprint_data: FingerprintData) -> str:
         """Get the fingerprint hash for external use"""
-        return self.generate_composite_fingerprint(fingerprint_data, ip_address)
+        return self.generate_composite_fingerprint(fingerprint_data)
 
 
 # Global instance
