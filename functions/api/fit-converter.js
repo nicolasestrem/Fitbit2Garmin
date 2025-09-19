@@ -7,7 +7,7 @@
  */
 
 // Import the official Garmin FIT SDK
-const FitSDK = require('@garmin/fitsdk');
+import FitSDK from '@garmin/fitsdk';
 const { MesgNum } = FitSDK.Profile;
 
 class FitbitConverter {
@@ -223,4 +223,4 @@ function convertFitbitToGarmin(jsonFiles) {
   return results;
 }
 
-module.exports = { convertFitbitToGarmin };
+export { convertFitbitToGarmin };

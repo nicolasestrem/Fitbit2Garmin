@@ -247,6 +247,9 @@ async function handleConvert(request, env, corsHeaders) {
     const convertedFiles = [];
     let totalEntries = 0;
 
+    // Import the FIT converter module (ES module)
+    const { convertFitbitToGarmin } = await import('./fit-converter.js');
+
     // Process each uploaded file
     for (const fileInfo of metadata.files) {
       try {
@@ -260,7 +263,6 @@ async function handleConvert(request, env, corsHeaders) {
         const jsonData = JSON.parse(content);
 
         // Use the proper JavaScript FIT converter that mirrors the Python implementation
-        const { convertFitbitToGarmin } = require('./fit-converter.js');
         const conversionResults = convertFitbitToGarmin([[fileInfo.filename, jsonData]]);
         const [outputFilename, fitData] = conversionResults[0];
 
