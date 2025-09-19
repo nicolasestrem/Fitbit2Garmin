@@ -42,3 +42,4 @@ yarn-error.log*
 uploads/
 conversions/
 docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md
+/frontend/dist
