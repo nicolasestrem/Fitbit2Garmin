@@ -1,0 +1,5 @@
+# SPA routing for React Router
+/*    /index.html   200
+
+# API routes (if using Cloudflare Workers)
+/api/*  https://your-worker.your-subdomain.workers.dev/:splat  200
