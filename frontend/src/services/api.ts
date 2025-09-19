@@ -101,7 +101,8 @@ class ApiService {
 
   async downloadFile(conversionId: string, filename: string): Promise<Blob> {
     try {
-      const response = await api.get(`/download/${conversionId}/${filename}`, {
+      const encodedName = encodeURIComponent(filename);
+      const response = await api.get(`/download/${conversionId}/${encodedName}`, {
         responseType: 'blob',
       });
 

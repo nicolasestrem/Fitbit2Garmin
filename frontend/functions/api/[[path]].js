@@ -346,7 +346,9 @@ async function handleDownload(request, env, corsHeaders) {
     }
 
     const conversionId = pathParts[3];
-    const filename = pathParts[4];
+    const rawFilename = pathParts.slice(4).join('/');
+    // Decode URL-encoded characters (e.g., spaces as %20)
+    const filename = decodeURIComponent(rawFilename);
 
     // Check if conversion exists
     const conversionMetadata = await env.RATE_LIMITS.get(`conversion:${conversionId}`);
