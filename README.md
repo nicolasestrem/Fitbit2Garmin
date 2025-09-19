@@ -1,96 +1,68 @@
-# Fitbit Google Takeout to Garmin Converter
+# Fitbit Google Takeout → Garmin FIT Converter
 
-🔄 **Convert your Fitbit weight data from Google Takeout to Garmin-compatible .fit files**
+Convert Fitbit weight data (Google Takeout) into Garmin‑compatible .fit files and import them into Garmin Connect.
 
-## What This Does
+Live app
 
-This tool converts weight data exported from Fitbit via Google Takeout into .fit files that can be imported into Garmin Connect, preserving your historical weight tracking data when migrating from Fitbit to Garmin devices.
+- https://fitbit2garmin.app/
 
-## Features
+Features
 
-- ✅ **Google Takeout Compatible**: Works with the latest Fitbit export format
-- ✅ **Proven Algorithm**: Successfully tested with 12+ years of weight data
-<!-- ✅ **Free Tier**: Convert 2 files per day -->
-- ✅ **Abuse Protection**: Built-in rate limiting
-- ✅ **Body Fat Support**: Preserves body fat percentage when available
+- Google Takeout compatible: accepts weight-YYYY-MM-DD.json
+- Accurate FIT output using @garmin/fitsdk Encoder
+- Upload multiple files and download .fit results
+- Runs fully on Cloudflare Pages (Functions + R2 + KV)
 
-## How to Use
+How to use
 
-1. **Export from Fitbit**:
-   - Go to Fitbit app → Profile → Data Export
-   - Use Google Takeout to download your data
-   - Find weight files in `Global Export Data/weight-YYYY-MM-DD.json`
+1) Export from Fitbit (Google Takeout) and locate weight-YYYY-MM-DD.json files
+2) Upload 1–3 files in the app
+3) Convert to .fit — we generate Weight WW-YYYY Fitbit.fit
+4) Download and import each file into Garmin Connect
 
-2. **Convert**:
-   - Upload up to 3 JSON files
-   - Download the generated .fit files
+Docs
 
-3. **Import to Garmin**:
-   - Upload .fit files to Garmin Connect
-   - Your weight history will appear in your timeline
+- docs/ARCHITECTURE.md — system + API + storage
+- docs/DEPLOYMENT.md — Cloudflare Pages config + bindings + env vars
+- docs/TROUBLESHOOTING.md — routing, bundling, conversion, download issues
+- docs/CHANGELOG.md — what changed and when
+- docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md — conversion algorithm background
 
-## Technical Details
+Development
 
-See `docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md` for the complete technical breakdown of our timestamp breakthrough and conversion algorithm.
+Frontend
 
-## Project Structure
-
-```
-fitbit-takeout-to-garmin/
-├── docs/                     # Technical documentation
-├── backend/                  # FastAPI server
-├── frontend/                 # React application
-└── README.md
-```
-
-## Development
-
-### Backend (FastAPI)
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-### Frontend (React)
 ```bash
 cd frontend
-npm install
-npm start
+npm ci
+npm run dev
 ```
 
-## Deployment
+Pages dev (serve built output + Functions)
 
-Cloudflare Pages (frontend) + FastAPI (backend)
+```bash
+cd frontend && npm run build
+npx wrangler pages dev frontend/dist
+```
 
-- Frontend (Cloudflare Pages):
-  - Root directory: `frontend`
-  - Build command: `npm ci && npm run build`
-  - Build output directory: `dist`
-  - Optional Functions directory: `frontend/functions` (upload/download only; conversion disabled)
-- Backend (FastAPI):
-  - Run locally: `cd backend && python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --reload`
-  - Deploy to your preferred Python host (e.g. Fly.io/Render/Cloud Run)
+Deployment
 
-Environment & Routing
+See docs/DEPLOYMENT.md. In short:
 
-- Managed via `wrangler.toml` (Pages reads build-time vars from here; secrets stay in the Dashboard):
-  - `VITE_API_URL` — Frontend API base URL used by Vite at build time
-    - Example: `VITE_API_URL="https://your-backend.example.com/api"`
-    - Default in this repo: `"/api"` (calls Pages Functions)
-  - Runtime bindings (Functions):
-    - KV: `RATE_LIMITS`
-    - R2: `FILE_STORAGE`
+```bash
+cd frontend && npm ci && npm run build
+npx wrangler pages deploy frontend/dist --project-name fitbit2garmin --commit-dirty=true
+```
 
-- Preferred: set `VITE_API_URL` in `wrangler.toml` to your FastAPI backend (e.g. `https://api.example.com/api`). The frontend will call the backend directly and bypass Pages Functions for conversion.
-- If you keep Pages Functions for upload/download, the convert endpoint returns 501 with guidance to use the Python backend.
+Environment & bindings (wrangler.toml)
+
+- [vars]: VITE_API_URL (default "/api"), ENVIRONMENT
+- [[kv_namespaces]]: RATE_LIMITS
+- [[r2_buckets]]: FILE_STORAGE (fitbit2garmin-files)
+- compatibility_flags = ["nodejs_compat"]
 
 Notes
 
-- TypeScript target is ES2020 to avoid ES5 downleveling issues during Functions bundling.
-- Functions dependencies are installed during `postbuild` via `cd functions && npm ci`.
-- Conversion logic is implemented in Python per `docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md` for guaranteed compatibility with Garmin Connect.
-
----
-
-**Built by the community, for the community** 🏃‍♂️💨
+- Encoder usage: writeMesg(...) then close() → Uint8Array (no pipes)
+- Filenames with spaces are handled: client encodes, server decodes
+- The tested/ folder includes the proven Python script for reference only
