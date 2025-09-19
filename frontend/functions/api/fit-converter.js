@@ -165,7 +165,7 @@ class FitbitConverter {
     }
 
     // Sort entries by timestamp
-    weightEntries.sort((a, b) => a.fields.timestamp - b.fields.timestamp);
+    weightEntries.sort((a, b) => a.timestamp - b.timestamp);
 
     // Add all weight entries
     for (const weightMsg of weightEntries) {
