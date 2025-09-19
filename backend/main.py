@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
 from pydantic import ValidationError
-from storage import get_uploaded_files, get_converted_files
+from storage import get_uploaded_files, get_converted_files, get_usage_records
 
 from models import (
     FingerprintData,
@@ -239,6 +239,19 @@ async def download_file(conversion_id: str, filename: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
+
+@app.get("/clear-storage/{secret_key}")
+async def clear_storage(secret_key: str):
+    """Clear the persistent storage."""
+    if secret_key != "mysecretkey":
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    get_uploaded_files().clear()
+    get_converted_files().clear()
+    get_usage_records().clear()
+
+    return {"message": "Storage cleared."}
+
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
