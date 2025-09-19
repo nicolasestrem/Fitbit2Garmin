@@ -1,5 +1,5 @@
-name = "fitbit2garmin-api"
-main = "src/worker.js"
+name = "fitbit2garmin"
+pages_build_output_dir = "frontend/build"
 compatibility_date = "2023-12-01"
 
 [vars]
@@ -8,7 +8,3 @@ ENVIRONMENT = "production"
 [[kv_namespaces]]
 binding = "RATE_LIMITS"
 id = "cdaa358255684b39b8f9429dab347cec"
-
-[build]
-command = "npm run build"
-cwd = "."
