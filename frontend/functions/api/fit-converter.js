@@ -116,30 +116,20 @@ class FitbitConverter {
       }
     }
 
-    // Create FIT file encoder using official SDK
+    // Create FIT file encoder using official SDK (no streams; encoder returns Uint8Array)
     const encoder = new FitEncoder();
-    const fitData = [];
-
-    // Capture encoded data using FitSDK Stream
-    const stream = new FitStream();
-    stream.onData = (data) => {
-      fitData.push(...Array.from(data));
-    };
-
-    encoder.pipe(stream);
 
     // Add File ID message - exact same logic as Python
+    const firstTsMs = this.getUnixMs(jsonData[0]);
     const fileIdMessage = {
       mesgNum: MesgNum.FILE_ID,
-      fields: {
-        type: 4, // WEIGHT file type
-        manufacturer: 255, // FITBIT_ID
-        product: 1,
-        serialNumber: 1701,
-        number: 0, // Critical: this field was missing initially
-        timeCreated: Math.floor(jsonData[0].logId / 1000), // Use first entry's logId
-        productName: "Health Sync"
-      }
+      type: 4, // WEIGHT file type
+      manufacturer: 255, // FITBIT_ID
+      product: 1,
+      serialNumber: 1701,
+      number: 0,
+      timeCreated: new Date(firstTsMs), // JS Date; SDK encodes to FIT time
+      productName: "Health Sync"
     };
 
     encoder.writeMesg(fileIdMessage);
@@ -147,8 +137,7 @@ class FitbitConverter {
     // Process each weight entry - exact same logic as Python
     const weightEntries = [];
     for (const entry of jsonData) {
-      // Use logId directly as Unix timestamp (our breakthrough fix!)
-      const unixTimestamp = entry.logId;
+      const tsMs = this.getUnixMs(entry);
 
       // Convert weight to kg
       const weightKg = this.convertPoundsToKg(entry.weight);
@@ -164,19 +153,13 @@ class FitbitConverter {
       // Create weight scale message - CRITICAL: Field order must match template exactly
       const weightMsg = {
         mesgNum: MesgNum.WEIGHT_SCALE,
-        fields: {
-          timestamp: Math.floor(unixTimestamp / 1000), // Unix timestamp in seconds (breakthrough fix!)
-          weight: weightKg * 100, // Weight in grams (scale factor 100)
-          boneMass: 0, // Set to 0 as in sample - FIELD ORDER CRITICAL
-          muscleMass: 0, // Set to 0 as in sample - FIELD ORDER CRITICAL
-          percentHydration: 0.0 // Set to 0 as in sample - MUST be last
-        }
+        timestamp: new Date(tsMs),
+        weight: weightKg, // SDK applies scale=100 automatically
+        boneMass: 0.0,
+        muscleMass: 0.0,
+        percentHydration: 0.0,
+        ...(bodyFat !== null ? { percentFat: bodyFat } : {})
       };
-
-      // percent_fat MUST come after bone_mass and muscle_mass to match template
-      if (bodyFat !== null) {
-        weightMsg.fields.percentFat = bodyFat * 100; // Body fat percentage in 0.01% units
-      }
 
       weightEntries.push(weightMsg);
     }
@@ -189,11 +172,8 @@ class FitbitConverter {
       encoder.writeMesg(weightMsg);
     }
 
-    // Close the encoder to finalize the file
-    encoder.close();
-
-    // Get the encoded FIT file bytes
-    const fitBytes = new Uint8Array(fitData);
+    // Close the encoder to finalize the file and get bytes
+    const fitBytes = encoder.close();
 
     this.conversionCount++;
 
@@ -202,6 +182,27 @@ class FitbitConverter {
       entryCount: weightEntries.length,
       filename: this.getOutputFilename(filename)
     };
+  }
+
+  getUnixMs(entry) {
+    // Prefer explicit logId if present and looks like ms since epoch
+    if (entry?.logId && typeof entry.logId === 'number' && entry.logId > 1e12) {
+      return entry.logId;
+    }
+    // Fallback: parse date/time fields (MM/DD/YY and HH:MM:SS)
+    try {
+      const { date, time } = entry;
+      const parts = date.split('/');
+      const year = parts[2].length === 2 ? Number('20' + parts[2]) : Number(parts[2]);
+      const month = Number(parts[0]);
+      const day = Number(parts[1]);
+      const [hh, mm, ss] = (time || '00:00:00').split(':').map(Number);
+      const dt = new Date(Date.UTC(year, month - 1, day, hh, mm, ss));
+      return dt.getTime();
+    } catch {
+      // As a last resort, use now
+      return Date.now();
+    }
   }
 
   /**
