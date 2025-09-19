@@ -126,8 +126,8 @@ class ApiService {
         // Validation error
         throw new Error(apiError?.error || 'Validation error. Please check your input.');
       } else if (error.response?.status && error.response.status >= 500) {
-        // Server error
-        throw new Error('Server error. Please try again later.');
+        // Server error — surface details from API if present
+        throw new Error(apiError?.details || apiError?.error || 'Server error. Please try again later.');
       } else {
         // Other HTTP errors
         throw new Error(apiError?.error || error.message || 'An unexpected error occurred.');
