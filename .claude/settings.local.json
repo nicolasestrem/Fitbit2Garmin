@@ -26,7 +26,12 @@
       "Bash(npm uninstall:*)",
       "WebFetch(domain:54280952.fitbit2garmin.pages.dev)",
       "Bash(git checkout:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "mcp__cloudflare-bindings__r2_buckets_list",
+      "mcp__cloudflare-bindings__r2_bucket_create",
+      "WebFetch(domain:developer.garmin.com)",
+      "WebSearch",
+      "Bash(npm init:*)"
     ],
     "deny": [],
     "ask": []

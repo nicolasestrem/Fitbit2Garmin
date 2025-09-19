@@ -8,3 +8,7 @@ ENVIRONMENT = "production"
 [[kv_namespaces]]
 binding = "RATE_LIMITS"
 id = "cdaa358255684b39b8f9429dab347cec"
+
+[[r2_buckets]]
+binding = "FILE_STORAGE"
+bucket_name = "fitbit2garmin-files"

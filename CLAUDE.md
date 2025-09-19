@@ -23,7 +23,7 @@ python main.py               # Alternative server start
 
 ## Architecture Overview
 
-This is a Fitbit to Garmin data converter web application with a React frontend and FastAPI backend, designed for Vercel deployment.
+This is a Fitbit to Garmin data converter web application with a React frontend and FastAPI backend.
 
 ### Core Components
 
@@ -32,7 +32,6 @@ This is a Fitbit to Garmin data converter web application with a React frontend 
 - `converter.py` - Core logic for converting Fitbit JSON to Garmin .fit files using fit-tool library
 - `models.py` - Pydantic models for API requests/responses and validation
 - `fingerprint.py` - Rate limiting and abuse protection using browser fingerprinting
-- `api/index.py` - Vercel serverless function wrapper for the FastAPI app
 
 **Frontend Architecture** (`/frontend/src/`):
 - `App.tsx` - Main React application with file upload workflow
@@ -54,24 +53,17 @@ This is a Fitbit to Garmin data converter web application with a React frontend 
 **Critical Implementation Notes**:
 - Uses Unix timestamps directly (not FIT epoch) - see docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md
 - Rate limiting: 2 file conversions per day via fingerprinting
-- CORS configured for Vercel deployments and localhost development
+- CORS configured for localhost development
 - In-memory storage for uploaded files (production should use Redis/DB)
 
 ### Dependencies
 
 **Backend**: FastAPI, uvicorn, fit-tool (0.9.13), pydantic, python-multipart, aiofiles
-**Frontend**: React 18, TypeScript, Tailwind CSS, @headlessui/react, react-dropzone, axios, @vercel/analytics
+**Frontend**: React 18, TypeScript, Tailwind CSS, @headlessui/react, react-dropzone, axios
 
-### Deployment
-
-Configured for Vercel serverless deployment:
-- Backend functions deploy to `/api/` routes
-- Frontend builds to static files
-- Environment variables needed for production CORS settings
 
 ## Important File Patterns
 
 - `weight-*.json` - Google Takeout Fitbit export files
 - `Weight *.fit` - Generated Garmin-compatible output files
 - `docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md` - Technical conversion documentation
-- Use Vercel MCP Server extensively in this project to speed up development test debug process
