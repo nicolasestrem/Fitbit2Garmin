@@ -61,25 +61,27 @@ npm start
 
 ## Deployment
 
-Cloudflare Pages + Functions
+Cloudflare Pages (frontend) + FastAPI (backend)
 
-- Root directory: `frontend`
-- Build command: `npm ci && npm run build`
-- Build output directory: `dist`
-- Functions directory: `frontend/functions`
+- Frontend (Cloudflare Pages):
+  - Root directory: `frontend`
+  - Build command: `npm ci && npm run build`
+  - Build output directory: `dist`
+  - Optional Functions directory: `frontend/functions` (upload/download only; conversion disabled)
+- Backend (FastAPI):
+  - Run locally: `cd backend && python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --reload`
+  - Deploy to your preferred Python host (e.g. Fly.io/Render/Cloud Run)
 
-Routing
+Frontend → Backend API routing
 
-- `frontend/public/_redirects`:
-  - `/api/*    /api/:splat   200`
-  - `/*        /index.html   200`
-- `frontend/public/_routes.json`:
-  - `{ "version": 1, "include": ["/api/*"], "exclude": [] }`
+- Preferred: set `VITE_API_URL` in the Pages project to your backend API (e.g. `https://api.example.com/api`). The frontend will call the backend directly and bypass Pages Functions.
+- If you keep Pages Functions for upload/download, the convert endpoint returns 501 with guidance to use the Python backend.
 
 Notes
 
 - TypeScript target is ES2020 to avoid ES5 downleveling issues during Functions bundling.
 - Functions dependencies are installed during `postbuild` via `cd functions && npm ci`.
+- Conversion logic is implemented in Python per `docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md` for guaranteed compatibility with Garmin Connect.
 
 ---
 

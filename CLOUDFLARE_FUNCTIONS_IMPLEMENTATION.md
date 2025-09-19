@@ -99,53 +99,11 @@ async function handleDownload(request, env, corsHeaders) {
 // Returns API status and version
 ```
 
-### functions/api/fit-converter.js - FIT File Generation
+### functions/api/fit-converter.js - Status
 
-**Multiple iterations attempted**:
+Conversion via JavaScript is currently disabled. The Garmin FIT binary format is strict and the working implementation lives in the Python backend (see backend/converter.py and docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md).
 
-1. **Manual binary implementation** (failed - incorrect format)
-2. **Garmin @garmin/fitsdk approach** (partially working but API issues)
-
-#### Current Implementation Using Garmin SDK
-
-```javascript
-const FitSDK = require('@garmin/fitsdk');
-const { MesgNum } = FitSDK.Profile;
-
-class FitbitConverter {
-  processJsonData(jsonData, filename) {
-    // Create FIT file encoder
-    const encoder = new FitSDK.Encoder();
-
-    // File ID Message - mirrors Python exactly
-    const fileIdMessage = {
-      mesgNum: MesgNum.FILE_ID,
-      fields: {
-        type: 4,              // WEIGHT file type
-        manufacturer: 255,    // FITBIT_ID
-        product: 1,
-        serialNumber: 1701,
-        number: 0,            // Critical field
-        timeCreated: Math.floor(logId / 1000),
-        productName: "Health Sync"
-      }
-    };
-
-    // Weight Scale Message for each entry
-    const weightMsg = {
-      mesgNum: MesgNum.WEIGHT_SCALE,
-      fields: {
-        timestamp: Math.floor(unixTimestamp / 1000), // Unix timestamp (breakthrough fix!)
-        weight: weightKg * 100,        // Scale factor 100
-        boneMass: 0,                   // Field order critical
-        muscleMass: 0,                 // Field order critical
-        percentFat: bodyFat * 100,     // Scale factor 100 (if available)
-        percentHydration: 0.0          // Must be last
-      }
-    };
-  }
-}
-```
+The Pages Function `POST /api/convert` returns HTTP 501 with error_code `CONVERTER_DISABLED` and guidance to set `VITE_API_URL` to a running FastAPI backend.
 
 ## Deployment Process
 

@@ -247,8 +247,15 @@ async function handleConvert(request, env, corsHeaders) {
     const convertedFiles = [];
     let totalEntries = 0;
 
-    // Import the FIT converter module (ES module)
-    const { convertFitbitToGarmin } = await import('./fit-converter.js');
+    // Temporary: JS converter disabled — use Python backend per FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md
+    return new Response(JSON.stringify({
+      error: "Conversion not available in Pages Functions",
+      details: "Use the Python backend converter. Set VITE_API_URL to your backend (e.g., https://api.example.com/api) so the frontend calls FastAPI.",
+      error_code: "CONVERTER_DISABLED"
+    }), {
+      status: 501,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
     // Process each uploaded file
     for (const fileInfo of metadata.files) {
@@ -259,21 +266,9 @@ async function handleConvert(request, env, corsHeaders) {
           throw new Error(`File not found: ${fileInfo.filename}`);
         }
 
+        // Unreachable with converter disabled above; retained for future JS implementation
         const content = await fileObj.text();
         const jsonData = JSON.parse(content);
-
-        // Use the proper JavaScript FIT converter that mirrors the Python implementation
-        const conversionResults = await convertFitbitToGarmin([[fileInfo.filename, jsonData]]);
-        const [outputFilename, fitData] = conversionResults[0];
-
-        // Store converted file in R2
-        await env.FILE_STORAGE.put(`converted/${conversionId}/${outputFilename}`, fitData, {
-          httpMetadata: {
-            contentType: 'application/octet-stream'
-          }
-        });
-
-        convertedFiles.push(outputFilename);
         totalEntries += jsonData.length;
 
       } catch (fileError) {
