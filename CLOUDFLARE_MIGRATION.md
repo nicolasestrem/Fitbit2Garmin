@@ -56,7 +56,7 @@ The following API endpoints return "not yet implemented" responses:
 ### wrangler.toml
 ```toml
 name = "fitbit2garmin"
-pages_build_output_dir = "frontend/build"
+pages_build_output_dir = "frontend/dist"
 compatibility_date = "2023-12-01"
 
 [vars]
@@ -130,21 +130,33 @@ To complete the migration and restore full functionality:
 ## Build and Deployment Commands
 
 ```bash
-# Build frontend
-cd frontend && npm run build
+# Build frontend (installs UI deps, builds, then installs Functions deps)
+cd frontend && npm ci && npm run build
 
 # Deploy to Cloudflare Pages
-npx wrangler pages deploy frontend/build --project-name=fitbit2garmin --commit-dirty=true
+npx wrangler pages deploy frontend/dist --project-name=fitbit2garmin --commit-dirty=true
 
 # Check deployment status
 npx wrangler pages deployment list --project-name=fitbit2garmin
+
+### Pages GUI Build Settings
+
+- Root directory: `frontend`
+- Build command: `npm ci && npm run build`
+- Build output directory: `dist`
+- Functions directory: `frontend/functions`
+
+Important build fixes
+
+- Set `frontend/tsconfig.json` target to `ES2020` to prevent ES5 downleveling errors during Functions bundling.
+- Ensure Functions dependencies install during `postbuild` with `cd functions && npm ci` (see `frontend/package.json`).
 ```
 
 ## Monitoring and Debugging
 
 - **Build logs**: Available in Cloudflare Dashboard
 - **Function logs**: `wrangler pages deployment tail`
-- **Local development**: `wrangler pages dev frontend/build`
+- **Local development**: `wrangler pages dev frontend/dist`
 
 ## Architecture Changes
 
