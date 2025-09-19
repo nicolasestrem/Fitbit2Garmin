@@ -9,7 +9,7 @@ from typing import Dict, Optional, Tuple
 from models import FingerprintData, UsageRecord
 from storage import get_usage_records
 
-DAILY_LIMIT = 2  # 2 conversions per day
+DAILY_LIMIT = 3  # 3 conversions per day
 
 
 class FingerprintManager:

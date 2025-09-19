@@ -1,23 +1,36 @@
 name: Claude Code Review
 
 on:
-  pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+  # Run only on manual workflow dispatch or when mentioned in PR comments
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request number to review'
+        required: true
+        type: string
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+  # Automatic triggers commented out for budget control
+  # pull_request:
+  #   types: [opened, synchronize]
+  #   # Optional: Only run on specific file changes
+  #   # paths:
+  #   #   - "src/**/*.ts"
+  #   #   - "src/**/*.tsx"
+  #   #   - "src/**/*.js"
+  #   #   - "src/**/*.jsx"
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-    
+    # Only run on manual dispatch or when @claude-review is mentioned
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@claude-review')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude-review'))
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -47,6 +60,8 @@ jobs:
             Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
 
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+
+            Note: This review was triggered manually or by @claude-review mention to control costs.
           
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options

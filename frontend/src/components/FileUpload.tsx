@@ -14,7 +14,7 @@ interface FileUploadProps {
 
 export const FileUpload: React.FC<FileUploadProps> = ({
   onFilesSelected,
-  maxFiles = 2,
+  maxFiles = 3,
   disabled = false,
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -126,7 +126,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         </ol>
       </div>
 
-      {/* Free Tier Notice */}
+      {/* Free Tier Notice commented out
       <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
         <p className="text-xs text-gray-600">
           <span className="font-medium">Free Tier:</span> Convert up to 2 files per day.{' '}
@@ -135,6 +135,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </span>
         </p>
       </div>
+      */}
     </div>
   );
 };
