@@ -133,7 +133,8 @@ function App() {
                 Convert your Fitbit weight data to Garmin-compatible .fit files
               </p>
             </div>
-            {/* <div className="text-right">
+            {/* Usage limits display commented out
+            <div className="text-right">
               <p className="text-sm text-gray-500">
                 {usageLimits ? (
                   <>
@@ -159,7 +160,8 @@ function App() {
                   'Ready'
                 )}
               </p>
-            </div> */}
+            </div>
+            */}
           </div>
         </div>
       </header>
@@ -201,7 +203,7 @@ function App() {
             </h2>
             <FileUpload
               onFilesSelected={handleFilesSelected}
-              maxFiles={2}
+              maxFiles={3}
               disabled={state !== 'idle'}
             />
           </section>
@@ -238,8 +240,8 @@ function App() {
                 </div>
               </div>
 
-              {/* Rate limit warning */}
-              {/* {usageLimits && !usageLimits.can_convert && (
+              {/* Rate limit warning and upgrade messaging commented out
+              {usageLimits && !usageLimits.can_convert && (
                 <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-sm text-yellow-800">
                     <span className="font-medium">Daily limit reached:</span>{' '}
@@ -249,7 +251,8 @@ function App() {
                     </span>
                   </p>
                 </div>
-              )} */}
+              )}
+              */}
             </section>
           )}
 
@@ -316,14 +319,16 @@ function App() {
               >
                 Support
               </a>
-              {/* <a
+              {/* Sponsor/upgrade link commented out
+              <a
                 href="https://github.com/sponsors/nicolasestrems"
                 className="hover:text-gray-700"
                 target="_blank"
                 rel="noreferrer"
               >
                 Upgrade
-              </a> */}
+              </a>
+              */}
             </div>
           </div>
         </div>

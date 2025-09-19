@@ -93,10 +93,10 @@ async def upload_files(
     """
     try:
         # Validate file count
-        if len(files) > 2:
+        if len(files) > 3:
             raise HTTPException(
                 status_code=400,
-                detail="Maximum 2 files allowed. Upgrade for bulk processing."
+                detail="Maximum 3 files allowed."
             )
 
         if len(files) == 0:

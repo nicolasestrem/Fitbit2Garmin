@@ -10,7 +10,7 @@ This tool converts weight data exported from Fitbit via Google Takeout into .fit
 
 - ✅ **Google Takeout Compatible**: Works with the latest Fitbit export format
 - ✅ **Proven Algorithm**: Successfully tested with 12+ years of weight data
-- ✅ **Free Tier**: Convert 2 files per day
+<!-- ✅ **Free Tier**: Convert 2 files per day -->
 - ✅ **Abuse Protection**: Built-in rate limiting
 - ✅ **Body Fat Support**: Preserves body fat percentage when available
 
@@ -22,7 +22,7 @@ This tool converts weight data exported from Fitbit via Google Takeout into .fit
    - Find weight files in `Global Export Data/weight-YYYY-MM-DD.json`
 
 2. **Convert**:
-   - Upload up to 2 JSON files
+   - Upload up to 3 JSON files
    - Download the generated .fit files
 
 3. **Import to Garmin**:
