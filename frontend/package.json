@@ -14,20 +14,34 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.0",
+    "@testing-library/react": "^14.1.0",
+    "@testing-library/user-event": "^14.5.0",
     "@types/jest": "^27.5.2",
     "@vitejs/plugin-react": "^5.0.3",
+    "@vitest/coverage-v8": "^1.0.0",
     "autoprefixer": "^10.4.21",
+    "jsdom": "^23.0.0",
+    "msw": "^2.0.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.9.2",
-    "vite": "^7.1.6"
+    "vite": "^7.1.6",
+    "vitest": "^1.0.0"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "postbuild": "cd functions && npm ci",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:functions": "cd functions && npm test",
+    "test:all": "npm test && npm run test:functions",
+    "test:security": "vitest --run tests/security",
+    "test:load": "vitest --run tests/load"
   },
   "browserslist": {
     "production": [

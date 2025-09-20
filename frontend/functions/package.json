@@ -4,12 +4,25 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:security": "vitest run tests/integration/security-scenarios.test.js",
+    "test:load": "vitest run tests/integration/load-testing.test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@garmin/fitsdk": "^21.178.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "miniflare": "^3.0.0",
+    "supertest": "^6.3.0",
+    "vitest": "^1.0.0"
   }
 }
