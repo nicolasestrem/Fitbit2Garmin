@@ -3,36 +3,59 @@
  * This replaces the FastAPI backend with proper R2 storage
  */
 
+import { RateLimiter } from './rate-limiter.js';
+import {
+  AppError,
+  ERROR_CODES,
+  createFileError,
+  createConversionError,
+  createStorageError,
+  createUploadNotFoundError,
+  logError,
+  PartialFailureHandler
+} from './error-handler.js';
+import { SecurityValidator } from './security.js';
+
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // Add CORS headers
+  // Initialize security and rate limiting
+  const rateLimiter = new RateLimiter(env);
+  const securityValidator = new SecurityValidator(env);
+
+  // Add CORS and security headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': '*',
   };
 
+  const secureHeaders = securityValidator.addSecurityHeaders(corsHeaders);
+
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
-      headers: corsHeaders,
+      headers: secureHeaders,
     });
   }
 
   try {
+    // Security checks
+    securityValidator.validateRequestHeaders(request);
+    await securityValidator.isClientBlocked(request);
+    await securityValidator.checkSuspiciousActivity(request);
     // Basic routing
     if (pathname.startsWith('/api/usage/')) {
       return handleUsage(request, env, corsHeaders);
     } else if (pathname === '/api/upload') {
-      return handleUpload(request, env, corsHeaders);
+      return handleUpload(request, env, secureHeaders, rateLimiter, securityValidator);
     } else if (pathname === '/api/validate') {
-      return handleValidate(request, env, corsHeaders);
+      return handleValidate(request, env, secureHeaders, rateLimiter, securityValidator);
     } else if (pathname === '/api/convert') {
-      return handleConvert(request, env, corsHeaders);
+      return handleConvert(request, env, secureHeaders, rateLimiter, securityValidator);
     } else if (pathname.startsWith('/api/download/')) {
       return handleDownload(request, env, corsHeaders);
     } else if (pathname === '/api/' || pathname === '/api') {
@@ -57,14 +80,21 @@ export async function onRequest(context) {
     });
 
   } catch (error) {
-    console.error('API Error:', error);
-    return new Response(JSON.stringify({
-      error: "Internal Server Error",
-      message: error.message
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Enhanced error logging
+    logError(error, {
+      endpoint: pathname,
+      method: request.method,
+      userAgent: request.headers.get('user-agent')
     });
+
+    // Return structured error response
+    if (error instanceof AppError) {
+      return error.toResponse(corsHeaders);
+    }
+
+    // Handle unexpected errors
+    const unexpectedError = new AppError(ERROR_CODES.INTERNAL_ERROR, error.message);
+    return unexpectedError.toResponse(corsHeaders);
   }
 }
 
@@ -97,7 +127,7 @@ async function handleUsage(request, env, corsHeaders) {
   });
 }
 
-async function handleUpload(request, env, corsHeaders) {
+async function handleUpload(request, env, corsHeaders, rateLimiter, securityValidator) {
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({
       error: "Method not allowed"
@@ -107,76 +137,86 @@ async function handleUpload(request, env, corsHeaders) {
     });
   }
 
+  // Check upload rate limit
+  const rateLimitResult = await rateLimiter.checkRateLimit(request, 'uploads');
+  if (rateLimitResult?.rateLimited) {
+    return rateLimiter.createRateLimitResponse(rateLimitResult, corsHeaders);
+  }
+
   try {
     // Parse multipart form data
     const formData = await request.formData();
     const files = formData.getAll('files');
 
-    // Validate file count
-    if (files.length > 3) {
-      return new Response(JSON.stringify({
-        error: "Maximum 3 files allowed."
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Validate files using rate limiter
+    const fileValidation = rateLimiter.validateFiles(files);
+    if (!fileValidation.valid) {
+      if (files.length > 3) {
+        throw new AppError(ERROR_CODES.TOO_MANY_FILES, null, 400);
+      } else {
+        throw createFileError('too_large', null, fileValidation.error);
+      }
     }
 
     if (files.length === 0) {
-      return new Response(JSON.stringify({
-        error: "No files provided"
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      throw createFileError('invalid_type', null, 'No files provided');
     }
 
     // Generate upload ID
     const uploadId = crypto.randomUUID();
     const fileData = [];
 
-    // Process each file
+    // Process each file with security validation
     for (const file of files) {
-      if (!file.name.endsWith('.json')) {
-        return new Response(JSON.stringify({
-          error: `Invalid file type: ${file.name}. Only .json files are supported.`
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      // Validate filename
+      const sanitizedFilename = securityValidator.validateFilename(file.name);
+
+      if (!sanitizedFilename.endsWith('.json')) {
+        throw createFileError('invalid_type', sanitizedFilename);
       }
 
-      // Read and validate JSON
+      // Read and validate content
       const content = await file.text();
       try {
-        const jsonData = JSON.parse(content);
+        // Security validation of content and JSON structure
+        const jsonData = securityValidator.validateFileContent(content, sanitizedFilename);
+
+        // Validate Google Takeout format with security checks
+        securityValidator.validateGoogleTakeoutFormat(jsonData, sanitizedFilename);
+
         fileData.push({
-          filename: file.name,
+          filename: sanitizedFilename,
           data: jsonData
         });
 
         // Store file in R2
-        await env.FILE_STORAGE.put(`uploads/${uploadId}/${file.name}`, content, {
-          httpMetadata: {
-            contentType: 'application/json'
-          }
-        });
-      } catch (jsonError) {
-        return new Response(JSON.stringify({
-          error: `Invalid JSON in file: ${file.name}`
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        try {
+          await env.FILE_STORAGE.put(`uploads/${uploadId}/${sanitizedFilename}`, content, {
+            httpMetadata: {
+              contentType: 'application/json'
+            }
+          });
+        } catch (storageError) {
+          throw createStorageError('upload', `Failed to store ${sanitizedFilename}: ${storageError.message}`);
+        }
+      } catch (validationError) {
+        if (validationError instanceof AppError) {
+          throw validationError;
+        }
+        throw createFileError('invalid_json', sanitizedFilename, validationError.message);
       }
     }
 
     // Store metadata in KV
-    await env.RATE_LIMITS.put(`upload:${uploadId}`, JSON.stringify({
-      files: fileData.map(f => ({ filename: f.filename, size: JSON.stringify(f.data).length })),
-      timestamp: Date.now(),
-      status: 'uploaded'
-    }), { expirationTtl: 3600 }); // 1 hour expiration
+    try {
+      await env.RATE_LIMITS.put(`upload:${uploadId}`, JSON.stringify({
+        files: fileData.map(f => ({ filename: f.filename, size: JSON.stringify(f.data).length })),
+        timestamp: Date.now(),
+        status: 'uploaded'
+      }), { expirationTtl: 3600 }); // 1 hour expiration
+    } catch (kvError) {
+      throw createStorageError('metadata', `Failed to store upload metadata: ${kvError.message}`);
+    }
 
     return new Response(JSON.stringify({
       upload_id: uploadId,
@@ -188,28 +228,17 @@ async function handleUpload(request, env, corsHeaders) {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    return new Response(JSON.stringify({
-      error: "Upload failed",
-      details: error.message
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // Re-throw AppErrors to be handled by main error handler
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    // Wrap unexpected errors
+    throw new AppError(ERROR_CODES.INTERNAL_ERROR, `Upload failed: ${error.message}`);
   }
 }
 
-async function handleValidate(request, env, corsHeaders) {
-  return new Response(JSON.stringify({
-    error: "Validation functionality not yet implemented",
-    message: "API migration in progress - please check back soon"
-  }), {
-    status: 501,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
-
-async function handleConvert(request, env, corsHeaders) {
+async function handleValidate(request, env, corsHeaders, rateLimiter, securityValidator) {
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({
       error: "Method not allowed"
@@ -235,7 +264,7 @@ async function handleConvert(request, env, corsHeaders) {
     const uploadMetadata = await env.RATE_LIMITS.get(`upload:${upload_id}`);
     if (!uploadMetadata) {
       return new Response(JSON.stringify({
-        error: "Upload ID not found"
+        error: "Upload ID not found or expired"
       }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -243,80 +272,284 @@ async function handleConvert(request, env, corsHeaders) {
     }
 
     const metadata = JSON.parse(uploadMetadata);
-    const conversionId = crypto.randomUUID();
-    const convertedFiles = [];
-    let totalEntries = 0;
+    const validationResults = [];
 
-    // Import the FIT converter module (now enabled)
+    // Import the FIT converter for validation logic
     const { convertFitbitToGarmin } = await import('./fit-converter.js');
 
-    // Process each uploaded file
+    // Validate each uploaded file
     for (const fileInfo of metadata.files) {
       try {
         // Retrieve file from R2
         const fileObj = await env.FILE_STORAGE.get(`uploads/${upload_id}/${fileInfo.filename}`);
         if (!fileObj) {
-          throw new Error(`File not found: ${fileInfo.filename}`);
+          validationResults.push({
+            filename: fileInfo.filename,
+            is_valid: false,
+            error_message: "File not found in storage"
+          });
+          continue;
         }
 
         const content = await fileObj.text();
         const jsonData = JSON.parse(content);
-        totalEntries += jsonData.length;
 
-        const conversionResults = await convertFitbitToGarmin([[fileInfo.filename, jsonData]]);
-        const [outputFilename, fitData] = conversionResults[0];
+        // Validate format using converter logic
+        const isValidFormat = validateGoogleTakeoutFormat(jsonData);
 
-        // Store converted file in R2
-        await env.FILE_STORAGE.put(`converted/${conversionId}/${outputFilename}`, fitData, {
-          httpMetadata: { contentType: 'application/octet-stream' }
-        });
+        if (isValidFormat) {
+          // Get date range
+          const dateRange = getDateRange(jsonData);
 
-        convertedFiles.push(outputFilename);
+          validationResults.push({
+            filename: fileInfo.filename,
+            is_valid: true,
+            entry_count: jsonData.length,
+            date_range: dateRange,
+            size_kb: Math.round(fileInfo.size / 1024)
+          });
+        } else {
+          validationResults.push({
+            filename: fileInfo.filename,
+            is_valid: false,
+            error_message: "Invalid Google Takeout format. Expected weight data with logId, weight, date, time fields."
+          });
+        }
 
       } catch (fileError) {
-        console.error(`Error processing file ${fileInfo.filename}:`, fileError);
-        const msg = (fileError && fileError.message) ? String(fileError.message) : 'Unknown error';
-        const isSdkIssue = msg.toLowerCase().includes('garmin fit sdk') || msg.toLowerCase().includes('fitsdk');
-        return new Response(JSON.stringify({
-          error: `Failed to process file: ${fileInfo.filename}`,
-          details: msg,
-          error_code: isSdkIssue ? 'SDK_UNAVAILABLE' : 'CONVERT_FAILED'
-        }), {
-          status: isSdkIssue ? 501 : 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        console.error(`Validation error for ${fileInfo.filename}:`, fileError);
+        validationResults.push({
+          filename: fileInfo.filename,
+          is_valid: false,
+          error_message: fileError.message || "Failed to validate file"
         });
       }
     }
 
-    // Store conversion metadata
-    await env.RATE_LIMITS.put(`conversion:${conversionId}`, JSON.stringify({
-      upload_id: upload_id,
-      files: convertedFiles,
-      timestamp: Date.now(),
-      total_entries: totalEntries,
-      status: 'completed'
-    }), { expirationTtl: 7200 }); // 2 hours expiration
+    const allValid = validationResults.every(result => result.is_valid);
+    const totalEntries = validationResults
+      .filter(result => result.is_valid)
+      .reduce((sum, result) => sum + (result.entry_count || 0), 0);
 
     return new Response(JSON.stringify({
-      conversion_id: conversionId,
-      files_converted: convertedFiles.length,
+      upload_id: upload_id,
+      overall_valid: allValid,
       total_entries: totalEntries,
-      download_urls: convertedFiles.map(filename => `/api/download/${conversionId}/${filename}`),
-      message: `Successfully converted ${convertedFiles.length} files`
+      files: validationResults,
+      message: allValid
+        ? `All ${validationResults.length} files are valid and ready for conversion`
+        : `${validationResults.filter(r => !r.is_valid).length} of ${validationResults.length} files have validation errors`
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Conversion error:', error);
+    console.error('Validation error:', error);
     return new Response(JSON.stringify({
-      error: "Conversion failed",
+      error: "Validation failed",
       details: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+  }
+}
+
+// Helper function to validate Google Takeout format
+function validateGoogleTakeoutFormat(data) {
+  if (!Array.isArray(data) || data.length === 0) {
+    return false;
+  }
+
+  // Check first entry for required fields
+  const firstEntry = data[0];
+  const requiredFields = ['logId', 'weight', 'date', 'time'];
+
+  return requiredFields.every(field => field in firstEntry);
+}
+
+// Helper function to get date range from data
+function getDateRange(data) {
+  if (!data || data.length === 0) return 'No data';
+
+  try {
+    const dates = data.map(entry => {
+      if (entry.date) {
+        const parts = entry.date.split('/');
+        const year = parts[2].length === 2 ? Number('20' + parts[2]) : Number(parts[2]);
+        const month = Number(parts[0]);
+        const day = Number(parts[1]);
+        return new Date(year, month - 1, day);
+      }
+      return null;
+    }).filter(date => date !== null);
+
+    if (dates.length === 0) return 'Invalid dates';
+
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
+
+    const formatDate = (date) => {
+      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    };
+
+    if (minDate.getTime() === maxDate.getTime()) {
+      return formatDate(minDate);
+    } else {
+      return `${formatDate(minDate)} to ${formatDate(maxDate)}`;
+    }
+  } catch (error) {
+    return 'Unable to determine date range';
+  }
+}
+
+async function handleConvert(request, env, corsHeaders, rateLimiter, securityValidator) {
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({
+      error: "Method not allowed"
+    }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Check conversion rate limit
+  const rateLimitResult = await rateLimiter.checkRateLimit(request, 'conversions');
+  if (rateLimitResult?.rateLimited) {
+    return rateLimiter.createRateLimitResponse(rateLimitResult, corsHeaders);
+  }
+
+  try {
+    const { upload_id } = await request.json();
+
+    if (!upload_id) {
+      throw new AppError(ERROR_CODES.INTERNAL_ERROR, 'Upload ID required', 400);
+    }
+
+    // Check if upload exists
+    const uploadMetadata = await env.RATE_LIMITS.get(`upload:${upload_id}`);
+    if (!uploadMetadata) {
+      throw createUploadNotFoundError(upload_id);
+    }
+
+    const metadata = JSON.parse(uploadMetadata);
+    const conversionId = crypto.randomUUID();
+    const failureHandler = new PartialFailureHandler();
+    let totalEntries = 0;
+
+    // Import the FIT converter module (now enabled)
+    const { convertFitbitToGarmin } = await import('./fit-converter.js');
+
+    // Process each uploaded file with partial failure support
+    for (const fileInfo of metadata.files) {
+      try {
+        // Retrieve file from R2
+        const fileObj = await env.FILE_STORAGE.get(`uploads/${upload_id}/${fileInfo.filename}`);
+        if (!fileObj) {
+          throw createStorageError('retrieve', `File not found: ${fileInfo.filename}`);
+        }
+
+        const content = await fileObj.text();
+        const jsonData = JSON.parse(content);
+        const fileEntries = jsonData.length;
+
+        const conversionResults = await convertFitbitToGarmin([[fileInfo.filename, jsonData]]);
+        const [outputFilename, fitData] = conversionResults[0];
+
+        // Store converted file in R2
+        try {
+          await env.FILE_STORAGE.put(`converted/${conversionId}/${outputFilename}`, fitData, {
+            httpMetadata: { contentType: 'application/octet-stream' }
+          });
+        } catch (storageError) {
+          throw createStorageError('store_converted', `Failed to store ${outputFilename}: ${storageError.message}`);
+        }
+
+        totalEntries += fileEntries;
+        failureHandler.addSuccess(fileInfo.filename, {
+          original_filename: fileInfo.filename,
+          converted_filename: outputFilename,
+          entries: fileEntries
+        });
+
+      } catch (fileError) {
+        console.error(`Error processing file ${fileInfo.filename}:`, fileError);
+
+        let conversionError;
+        if (fileError instanceof AppError) {
+          conversionError = fileError;
+        } else {
+          const msg = (fileError && fileError.message) ? String(fileError.message) : 'Unknown error';
+          conversionError = createConversionError(msg);
+        }
+
+        failureHandler.addFailure(fileInfo.filename, conversionError);
+      }
+    }
+
+    // If all files failed, throw error
+    if (!failureHandler.hasSuccesses()) {
+      throw new AppError(ERROR_CODES.CONVERSION_FAILED, 'All files failed to convert', 500);
+    }
+
+    // Get successful results for response
+    const successfulResults = failureHandler.getSuccessfulResults();
+    const convertedFiles = successfulResults.map(r => r.converted_filename);
+
+    // Store conversion metadata
+    try {
+      await env.RATE_LIMITS.put(`conversion:${conversionId}`, JSON.stringify({
+        upload_id: upload_id,
+        files: convertedFiles,
+        timestamp: Date.now(),
+        total_entries: totalEntries,
+        status: failureHandler.hasFailures() ? 'partial_success' : 'completed',
+        failed_files: failureHandler.hasFailures() ? failureHandler.errors.length : 0
+      }), { expirationTtl: 7200 }); // 2 hours expiration
+    } catch (kvError) {
+      throw createStorageError('metadata', `Failed to store conversion metadata: ${kvError.message}`);
+    }
+
+    // Return appropriate response based on success/failure mix
+    if (failureHandler.hasFailures() && failureHandler.hasSuccesses()) {
+      // Partial success - return 207 Multi-Status
+      return new Response(JSON.stringify({
+        conversion_id: conversionId,
+        files_converted: convertedFiles.length,
+        total_entries: totalEntries,
+        download_urls: convertedFiles.map(filename => `/api/download/${conversionId}/${filename}`),
+        partial_success: true,
+        successful_files: successfulResults.length,
+        failed_files: failureHandler.errors.length,
+        errors: failureHandler.errors,
+        message: `${convertedFiles.length} of ${metadata.files.length} files converted successfully`
+      }), {
+        status: 207, // Multi-Status
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } else {
+      // Complete success
+      return new Response(JSON.stringify({
+        conversion_id: conversionId,
+        files_converted: convertedFiles.length,
+        total_entries: totalEntries,
+        download_urls: convertedFiles.map(filename => `/api/download/${conversionId}/${filename}`),
+        message: `Successfully converted ${convertedFiles.length} files`
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+  } catch (error) {
+    // Re-throw AppErrors to be handled by main error handler
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    // Wrap unexpected errors
+    throw new AppError(ERROR_CODES.CONVERSION_FAILED, `Conversion failed: ${error.message}`);
   }
 }
 
@@ -406,3 +639,6 @@ async function handleDownload(request, env, corsHeaders) {
     });
   }
 }
+
+// Export Durable Object class for Cloudflare Workers
+export { RateLimitDO } from './rate-limit-do.js';

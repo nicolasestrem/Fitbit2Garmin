@@ -32,7 +32,16 @@
       "WebFetch(domain:developer.garmin.com)",
       "WebSearch",
       "Bash(npm init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm ci:*)",
+      "Bash(git push:*)",
+      "Bash(gh run view:*)",
+      "WebFetch(domain:docs.claude.com)",
+      "Bash(npm run test:integration:*)",
+      "Bash(npm run test:unit:*)",
+      "mcp__cloudflare-bindings__d1_database_query",
+      "Bash(npm test)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

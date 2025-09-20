@@ -17,3 +17,8 @@ id = "cdaa358255684b39b8f9429dab347cec"
 [[r2_buckets]]
 binding = "FILE_STORAGE"
 bucket_name = "fitbit2garmin-files"
+
+[[d1_databases]]
+binding = "RATE_LIMITS_DB"
+database_name = "fitbit2garmin-rate-limits"
+database_id = "9365a27e-4026-46a2-9a45-a989c5c786e2"
