@@ -639,3 +639,6 @@ async function handleDownload(request, env, corsHeaders) {
     });
   }
 }
+
+// Export Durable Object class for Cloudflare Workers
+export { RateLimitDO } from './rate-limit-do.js';

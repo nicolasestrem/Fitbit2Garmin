@@ -1,7 +1,10 @@
 /**
- * Silent rate limiting service using Cloudflare KV
+ * Enhanced rate limiting service using Durable Objects for atomic operations
+ * Falls back to Cloudflare KV for compatibility and availability
  * Implements sliding window rate limiting without exposing limits to users
  */
+
+import { AtomicRateLimiter } from './rate-limit-do.js';
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -22,6 +25,8 @@ const RATE_LIMITS = {
 class RateLimiter {
   constructor(env) {
     this.kv = env.RATE_LIMITS;
+    this.atomicLimiter = env.RATE_LIMIT_DO ? new AtomicRateLimiter(env) : null;
+    this.useDurableObjects = !!env.RATE_LIMIT_DO;
   }
 
   /**
@@ -45,6 +50,7 @@ class RateLimiter {
 
   /**
    * Check if request should be rate limited
+   * Uses Durable Objects for atomic operations, falls back to KV
    * Returns null if allowed, error object if rate limited
    */
   async checkRateLimit(request, type) {
@@ -55,6 +61,42 @@ class RateLimiter {
       return null; // Unknown type, allow
     }
 
+    // Try Durable Objects first for atomic operations
+    if (this.useDurableObjects && this.atomicLimiter) {
+      try {
+        const result = await this.atomicLimiter.checkRateLimit(clientId, type);
+
+        if (result.failOpen) {
+          // DO is unavailable, fall back to KV
+          console.warn('Durable Objects unavailable, falling back to KV rate limiting');
+          return await this.checkRateLimitKV(clientId, config, type);
+        }
+
+        return null; // Request allowed by DO
+      } catch (error) {
+        if (error.code === 'RATE_LIMIT_EXCEEDED') {
+          return {
+            rateLimited: true,
+            resetTime: error.details.resetTime,
+            retryAfter: error.details.retryAfter
+          };
+        }
+
+        // DO error, fall back to KV
+        console.warn('Durable Objects error, falling back to KV:', error);
+        return await this.checkRateLimitKV(clientId, config, type);
+      }
+    }
+
+    // Use KV as fallback or primary (if DO not available)
+    return await this.checkRateLimitKV(clientId, config, type);
+  }
+
+  /**
+   * KV-based rate limiting (fallback implementation)
+   * Note: This has race condition vulnerabilities but provides availability
+   */
+  async checkRateLimitKV(clientId, config, type) {
     const key = this.getRateLimitKey(clientId, type);
     const now = Math.floor(Date.now() / 1000);
     const windowStart = now - config.window;
@@ -93,7 +135,7 @@ class RateLimiter {
 
       return null; // Request allowed
     } catch (error) {
-      console.error('Rate limit check failed:', error);
+      console.error('KV rate limit check failed:', error);
       // On error, allow the request (fail open)
       return null;
     }
