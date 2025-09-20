@@ -26,6 +26,17 @@ export interface ConversionResponse {
   total_entries: number;
   download_urls: string[];
   message: string;
+  partial_success?: boolean;
+  successful_files?: number;
+  failed_files?: number;
+  errors?: Array<{
+    item: string;
+    status: string;
+    error: {
+      message: string;
+      error_code?: string;
+    };
+  }>;
 }
 
 export interface UsageLimits {
@@ -71,6 +82,19 @@ class ApiService {
   }
 
 
+
+  async validateFiles(uploadId: string): Promise<FileValidationResult[]> {
+    try {
+      const response = await api.post('/validate', {
+        upload_id: uploadId,
+      });
+
+      return response.data.files || [];
+    } catch (error) {
+      this.handleApiError(error);
+      throw error;
+    }
+  }
 
   async convertFiles(uploadId: string): Promise<ConversionResponse> {
     try {
@@ -118,20 +142,40 @@ class ApiService {
       const apiError = error.response?.data as ApiError;
 
       if (error.response?.status === 429) {
-        // Rate limit exceeded
-        throw new Error(apiError?.error || 'Rate limit exceeded. Please try again later.');
+        // Rate limit exceeded - include retry information
+        const retryAfter = error.response.headers['retry-after'];
+        const resetTime = error.response.headers['x-ratelimit-reset'];
+
+        let message = apiError?.error || 'Rate limit exceeded. Please try again later.';
+        if (retryAfter) {
+          const waitTime = parseInt(retryAfter);
+          const waitMinutes = Math.ceil(waitTime / 60);
+          message += ` Please wait ${waitMinutes} minute${waitMinutes > 1 ? 's' : ''} before trying again.`;
+        }
+
+        throw new Error(message);
       } else if (error.response?.status === 400) {
-        // Bad request
-        throw new Error(apiError?.error || 'Invalid request. Please check your files.');
+        // Bad request - provide specific guidance
+        const suggestion = apiError?.suggestion || 'Please check your files and try again.';
+        throw new Error(apiError?.error || apiError?.message || `Invalid request. ${suggestion}`);
       } else if (error.response?.status === 422) {
-        // Validation error
-        throw new Error(apiError?.error || 'Validation error. Please check your input.');
+        // Validation error - provide specific guidance
+        const suggestion = apiError?.suggestion || 'Please check your input format.';
+        throw new Error(apiError?.error || apiError?.message || `Validation error. ${suggestion}`);
+      } else if (error.response?.status === 413) {
+        // File too large
+        throw new Error(apiError?.error || 'File too large. Please use smaller files.');
+      } else if (error.response?.status === 207) {
+        // Partial success - don't treat as error, let caller handle
+        return;
       } else if (error.response?.status && error.response.status >= 500) {
         // Server error — surface details from API if present
-        throw new Error(apiError?.details || apiError?.error || 'Server error. Please try again later.');
+        const suggestion = apiError?.suggestion || 'Please try again later.';
+        throw new Error(apiError?.error || apiError?.message || `Server error. ${suggestion}`);
       } else {
         // Other HTTP errors
-        throw new Error(apiError?.error || error.message || 'An unexpected error occurred.');
+        const suggestion = apiError?.suggestion || '';
+        throw new Error(apiError?.error || apiError?.message || error.message || 'An unexpected error occurred.' + (suggestion ? ` ${suggestion}` : ''));
       }
     } else {
       // Network or other errors
