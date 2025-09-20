@@ -3,19 +3,65 @@
  */
 
 import React, { Suspense } from 'react';
-import { Outlet, useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { Tabs } from '../../components/ui/Tabs';
 import { getMeasurement, type MeasurementSlug } from '../../measurements';
+// Import page components directly
+import WeightPage from './WeightPage';
+import HeartRatePage from './HeartRatePage';
+import BodyFatPage from './BodyFatPage';
+import BMIPage from './BMIPage';
+import StepsPage from './StepsPage';
+import SleepPage from './SleepPage';
+import VO2MaxPage from './VO2MaxPage';
+import HydrationPage from './HydrationPage';
+import BloodPressurePage from './BloodPressurePage';
+import RestingHeartRatePage from './RestingHeartRatePage';
 
 export default function MeasurementsPage() {
-  const { '*': slug } = useParams();
-  const currentSlug = slug as MeasurementSlug;
+  const { measurement } = useParams();
+  const currentSlug = measurement as MeasurementSlug;
+
+  // Debug logging
+  console.log('MeasurementsPage rendered with measurement:', measurement);
+  console.log('Current slug:', currentSlug);
 
   // Validate the slug
-  const measurement = getMeasurement(currentSlug);
-  if (!measurement) {
+  const measurementData = getMeasurement(currentSlug);
+  console.log('Measurement data:', measurementData);
+
+  if (!measurementData) {
+    console.log('Invalid measurement, redirecting to weight');
     return <Navigate to="/measurements/weight" replace />;
   }
+
+  // Component mapping
+  const getPageComponent = () => {
+    switch (currentSlug) {
+      case 'weight':
+        return <WeightPage />;
+      case 'heart-rate':
+        return <HeartRatePage />;
+      case 'body-fat':
+        return <BodyFatPage />;
+      case 'bmi':
+        return <BMIPage />;
+      case 'steps':
+        return <StepsPage />;
+      case 'sleep':
+        return <SleepPage />;
+      case 'vo2max':
+        return <VO2MaxPage />;
+      case 'hydration':
+        return <HydrationPage />;
+      case 'blood-pressure':
+        return <BloodPressurePage />;
+      case 'resting-heart-rate':
+        return <RestingHeartRatePage />;
+      default:
+        return <Navigate to="/measurements/weight" replace />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,7 +89,7 @@ export default function MeasurementsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         }>
-          <Outlet />
+          {getPageComponent()}
         </Suspense>
       </main>
 

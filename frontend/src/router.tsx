@@ -25,58 +25,16 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: '/',
+        path: '',
         element: <Navigate to="/measurements/weight" replace />
       },
       {
+        path: 'measurements/:measurement',
+        element: <MeasurementsPage />
+      },
+      {
         path: 'measurements',
-        element: <MeasurementsPage />,
-        children: [
-          {
-            path: '',
-            element: <Navigate to="weight" replace />
-          },
-          {
-            path: 'weight',
-            element: <WeightPage />
-          },
-          {
-            path: 'heart-rate',
-            element: <HeartRatePage />
-          },
-          {
-            path: 'body-fat',
-            element: <BodyFatPage />
-          },
-          {
-            path: 'bmi',
-            element: <BMIPage />
-          },
-          {
-            path: 'steps',
-            element: <StepsPage />
-          },
-          {
-            path: 'sleep',
-            element: <SleepPage />
-          },
-          {
-            path: 'vo2max',
-            element: <VO2MaxPage />
-          },
-          {
-            path: 'hydration',
-            element: <HydrationPage />
-          },
-          {
-            path: 'blood-pressure',
-            element: <BloodPressurePage />
-          },
-          {
-            path: 'resting-heart-rate',
-            element: <RestingHeartRatePage />
-          }
-        ]
+        element: <Navigate to="/measurements/weight" replace />
       },
       {
         path: '*',
