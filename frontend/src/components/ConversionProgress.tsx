@@ -6,7 +6,7 @@ import React from 'react';
 import { CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface ConversionProgressProps {
-  status: 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error';
+  status: 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error' | 'partial_success';
   message?: string;
   progress?: number;
   error?: string;
@@ -22,6 +22,8 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
     switch (status) {
       case 'completed':
         return <CheckCircleIcon className="h-8 w-8 text-green-500" />;
+      case 'partial_success':
+        return <ExclamationTriangleIcon className="h-8 w-8 text-yellow-500" />;
       case 'error':
         return <ExclamationTriangleIcon className="h-8 w-8 text-red-500" />;
       case 'loading':
@@ -38,6 +40,8 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
     switch (status) {
       case 'completed':
         return 'text-green-700 bg-green-50 border-green-200';
+      case 'partial_success':
+        return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'error':
         return 'text-red-700 bg-red-50 border-red-200';
       case 'loading':
@@ -64,6 +68,8 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
         return 'Converting to Garmin format...';
       case 'completed':
         return 'Conversion completed successfully!';
+      case 'partial_success':
+        return 'Conversion partially completed';
       case 'error':
         return error || 'An error occurred during conversion';
       default:
@@ -107,6 +113,15 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
             <div className="mt-2">
               <p className="text-sm opacity-75">
                 Your files are ready for download. Import them to Garmin Connect to restore your weight history.
+              </p>
+            </div>
+          )}
+
+          {/* Partial success details */}
+          {status === 'partial_success' && (
+            <div className="mt-2">
+              <p className="text-sm opacity-75">
+                Some files were converted successfully. Check the details above and download the available files.
               </p>
             </div>
           )}

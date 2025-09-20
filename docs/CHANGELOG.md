@@ -2,6 +2,25 @@
 
 2025-09-20
 
+## Major Feature: Measurements Tabs Interface
+
+- **feat**: Add comprehensive tab-based interface for multiple measurement types
+- **feat**: Implement React Router v7 with nested routes for measurements (/measurements/weight, /measurements/heart-rate, etc.)
+- **feat**: Add react-helmet-async for SEO optimization with unique meta tags per measurement
+- **feat**: Create accessible tabs component with ARIA compliance and keyboard navigation (arrow keys, Home/End)
+- **feat**: Build responsive design with horizontal tabs on desktop, select dropdown on mobile
+- **feat**: Add 9 "Coming soon" measurement pages with unique SEO content and FAQ structured data
+- **feat**: Extract weight conversion logic to dedicated WeightPage while maintaining full backward compatibility
+- **feat**: Implement central measurements registry for easy addition of new measurement types
+- **feat**: Add JSON-LD structured data for FAQ sections on each measurement page
+- **feat**: Create cross-measurement navigation and internal linking strategy
+- **feat**: Support partial_success state in ConversionProgress component
+- **docs**: Add comprehensive implementation guide at docs/MEASUREMENTS_TABS_INTERFACE.md
+- **perf**: Implement lazy loading for measurement pages with code splitting
+- **a11y**: Full WCAG 2.1 AA compliance with keyboard navigation and screen reader support
+
+## Previous Changes
+
 - Fix Cloudflare Pages routing so /api hits Functions (avoid SPA catch‑all)
 - Add _routes.json include /api/*; update _redirects and dist copies
 - Align wrangler.toml with frontend/dist; add nodejs_compat flag

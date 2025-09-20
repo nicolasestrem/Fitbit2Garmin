@@ -51,11 +51,14 @@ export interface FileValidationResult {
   is_valid: boolean;
   entry_count?: number;
   date_range?: string;
+  size_kb?: number;
   error_message?: string;
 }
 
 export interface ApiError {
   error: string;
+  message?: string;
+  suggestion?: string;
   details?: string;
   error_code?: string;
 }
