@@ -1,10 +1,11 @@
 /**
- * Enhanced rate limiting service using Durable Objects for atomic operations
- * Falls back to Cloudflare KV for compatibility and availability
- * Implements sliding window rate limiting without exposing limits to users
+ * Atomic Rate Limiting Service
+ * Multi-tier architecture: D1 (atomic) + KV (cache) + R2 (analytics)
+ * Eliminates race conditions through ACID-compliant database transactions
  */
 
-import { AtomicRateLimiter } from './rate-limit-do.js';
+import { MultiTierRateLimiter } from './multi-tier-rate-limiter.js';
+import { IntelligentFallback } from './intelligent-fallback.js';
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -24,9 +25,9 @@ const RATE_LIMITS = {
 
 class RateLimiter {
   constructor(env) {
-    this.kv = env.RATE_LIMITS;
-    this.atomicLimiter = env.RATE_LIMIT_DO ? new AtomicRateLimiter(env) : null;
-    this.useDurableObjects = !!env.RATE_LIMIT_DO;
+    this.env = env;
+    this.multiTier = new MultiTierRateLimiter(env);
+    this.fallback = new IntelligentFallback(env);
   }
 
   /**
@@ -50,7 +51,7 @@ class RateLimiter {
 
   /**
    * Check if request should be rate limited
-   * Uses Durable Objects for atomic operations, falls back to KV
+   * Uses multi-tier atomic rate limiting with intelligent fallbacks
    * Returns null if allowed, error object if rate limited
    */
   async checkRateLimit(request, type) {
@@ -61,84 +62,92 @@ class RateLimiter {
       return null; // Unknown type, allow
     }
 
-    // Try Durable Objects first for atomic operations
-    if (this.useDurableObjects && this.atomicLimiter) {
-      try {
-        const result = await this.atomicLimiter.checkRateLimit(clientId, type);
-
-        if (result.failOpen) {
-          // DO is unavailable, fall back to KV
-          console.warn('Durable Objects unavailable, falling back to KV rate limiting');
-          return await this.checkRateLimitKV(clientId, config, type);
-        }
-
-        return null; // Request allowed by DO
-      } catch (error) {
-        if (error.code === 'RATE_LIMIT_EXCEEDED') {
-          return {
-            rateLimited: true,
-            resetTime: error.details.resetTime,
-            retryAfter: error.details.retryAfter
-          };
-        }
-
-        // DO error, fall back to KV
-        console.warn('Durable Objects error, falling back to KV:', error);
-        return await this.checkRateLimitKV(clientId, config, type);
-      }
-    }
-
-    // Use KV as fallback or primary (if DO not available)
-    return await this.checkRateLimitKV(clientId, config, type);
-  }
-
-  /**
-   * KV-based rate limiting (fallback implementation)
-   * Note: This has race condition vulnerabilities but provides availability
-   */
-  async checkRateLimitKV(clientId, config, type) {
-    const key = this.getRateLimitKey(clientId, type);
-    const now = Math.floor(Date.now() / 1000);
-    const windowStart = now - config.window;
-
     try {
-      // Get existing rate limit data
-      const existing = await this.kv.get(key);
-      let requests = [];
+      // Map legacy types to new endpoint names
+      const endpoint = this.mapLegacyType(type);
 
-      if (existing) {
-        const data = JSON.parse(existing);
-        // Filter out old requests outside the window
-        requests = data.requests.filter(timestamp => timestamp > windowStart);
-      }
+      // Collect request metadata for analysis
+      const metadata = this.collectMetadata(request);
 
-      // Check if adding this request would exceed limit
-      if (requests.length >= config.max) {
-        const oldestRequest = Math.min(...requests);
-        const resetTime = oldestRequest + config.window;
-
-        return {
-          rateLimited: true,
-          resetTime: resetTime,
-          retryAfter: resetTime - now
-        };
-      }
-
-      // Add current request timestamp
-      requests.push(now);
-
-      // Store updated data with TTL
-      await this.kv.put(key, JSON.stringify({
-        requests: requests,
-        lastUpdate: now
-      }), { expirationTtl: config.window + 60 }); // TTL slightly longer than window
+      // Use intelligent fallback system
+      const result = await this.fallback.intelligentRateLimit(
+        clientId,
+        endpoint,
+        this.multiTier
+      );
 
       return null; // Request allowed
     } catch (error) {
-      console.error('KV rate limit check failed:', error);
-      // On error, allow the request (fail open)
+      if (error.code === 'RATE_LIMIT_EXCEEDED') {
+        return {
+          rateLimited: true,
+          resetTime: error.details.resetTime,
+          retryAfter: error.details.retryAfter,
+          current: error.details.current,
+          max: error.details.max
+        };
+      }
+
+      console.error('Rate limit check failed:', error);
+      // Fail open for reliability
       return null;
     }
+  }
+
+  /**
+   * Map legacy rate limit types to new endpoint names
+   */
+  mapLegacyType(type) {
+    const mapping = {
+      'conversions': 'conversions',
+      'uploads': 'uploads',
+      'files': 'uploads', // File operations use upload limits
+      'validations': 'validations',
+      'downloads': 'downloads'
+    };
+    return mapping[type] || 'suspicious';
+  }
+
+  /**
+   * Collect request metadata for rate limiting analysis
+   */
+  collectMetadata(request) {
+    return {
+      userAgent: request.headers.get('user-agent'),
+      country: request.cf?.country,
+      fingerprint: this.generateFingerprint(request),
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * Generate client fingerprint for enhanced tracking
+   */
+  generateFingerprint(request) {
+    const components = [
+      request.headers.get('user-agent') || '',
+      request.headers.get('accept-language') || '',
+      request.headers.get('accept-encoding') || '',
+      request.cf?.asn || '',
+      request.cf?.country || ''
+    ];
+
+    // Create a simple hash of the components
+    const fingerprint = components.join('|');
+    return this.simpleHash(fingerprint).toString(16);
+  }
+
+  /**
+   * Simple hash function for fingerprinting
+   */
+  simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
   }
 
   /**
@@ -223,25 +232,78 @@ class RateLimiter {
    */
   async getCurrentUsage(request, type) {
     const clientId = this.getClientId(request);
-    const config = RATE_LIMITS[type];
-    const key = this.getRateLimitKey(clientId, type);
-    const now = Math.floor(Date.now() / 1000);
-    const windowStart = now - config.window;
+    const endpoint = this.mapLegacyType(type);
 
     try {
-      const existing = await this.kv.get(key);
-      if (!existing) return { used: 0, remaining: config.max };
+      const status = await this.multiTier.getStatus(clientId);
+      const endpointStatus = status.rateLimits[endpoint];
 
-      const data = JSON.parse(existing);
-      const activeRequests = data.requests.filter(timestamp => timestamp > windowStart);
+      if (!endpointStatus) {
+        const config = RATE_LIMITS[type];
+        return { used: 0, remaining: config?.max || 10 };
+      }
 
       return {
-        used: activeRequests.length,
-        remaining: Math.max(0, config.max - activeRequests.length)
+        used: endpointStatus.current,
+        remaining: Math.max(0, endpointStatus.max - endpointStatus.current),
+        resetTime: endpointStatus.resetTime,
+        source: status.source
       };
     } catch (error) {
       console.error('Failed to get current usage:', error);
-      return { used: 0, remaining: config.max };
+      const config = RATE_LIMITS[type];
+      return { used: 0, remaining: config?.max || 10 };
+    }
+  }
+
+  /**
+   * Get comprehensive system status
+   */
+  async getSystemStatus() {
+    try {
+      return await this.fallback.getSystemStatus();
+    } catch (error) {
+      console.error('Failed to get system status:', error);
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Get analytics data
+   */
+  async getAnalytics(timeframe = '24h') {
+    try {
+      return await this.multiTier.getAnalytics(timeframe);
+    } catch (error) {
+      console.error('Failed to get analytics:', error);
+      return {
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Perform system maintenance
+   */
+  async performMaintenance() {
+    try {
+      const results = await Promise.allSettled([
+        this.multiTier.performMaintenance(),
+        this.fallback.performMaintenance()
+      ]);
+
+      return {
+        multiTier: results[0].status === 'fulfilled' ? results[0].value : { error: results[0].reason },
+        fallback: results[1].status === 'fulfilled' ? results[1].value : { error: results[1].reason },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Maintenance failed:', error);
+      return { error: error.message };
     }
   }
 }
