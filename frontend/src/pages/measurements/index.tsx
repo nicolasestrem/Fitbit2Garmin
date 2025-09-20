@@ -109,6 +109,9 @@ export default function MeasurementsPage() {
               <span>Powered by Cloudflare</span>
             </div>
           </div>
+          <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center">
+            Independent tool. Not affiliated with Garmin, Fitbit, or Google. Garmin, Fitbit, and Google are trademarks of their respective owners. Mentions are for compatibility only.
+          </div>
         </div>
       </footer>
     </div>
