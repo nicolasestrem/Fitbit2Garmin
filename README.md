@@ -4,7 +4,7 @@ Convert Fitbit weight data (Google Takeout) into Garmin‑compatible .fit files 
 
 Live app
 
-- https://fitbit2garmin.app/
+- https://trackersync.app
 
 Features
 
