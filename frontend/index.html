@@ -3,13 +3,70 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0e1116" />
+    <title>Trackersync - Convert Fitbit Google Takeout to Garmin .fit (weight)</title>
     <meta
       name="description"
-      content="Convert your Fitbit weight data from Google Takeout to Garmin-compatible .fit files"
+      content="Turn Fitbit weight JSON into Garmin-ready .fit files. Keep dates, times, and body fat. Free tier with 2 files per day."
     />
+    <link rel="canonical" href="https://trackersync.app/" />
+    <meta property="og:title" content="Trackersync - Fitbit to Garmin .fit (weight)" />
+    <meta
+      property="og:description"
+      content="Turn Fitbit weight JSON into Garmin-ready .fit files. Local processing, no account."
+    />
+    <meta property="og:url" content="https://trackersync.app/" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Fitbit2Garmin</title>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Trackersync",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web",
+  "description": "Turn Fitbit Google Takeout weight JSON into Garmin-ready .fit files. Local processing in your browser.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  },
+  "url": "https://trackersync.app/"
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Where do I find the right JSON file?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In your Google Takeout archive from Fitbit. Look for Global Export Data/weight-YYYY-MM-DD.json."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Garmin read .fit files for weight?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": ".fit files with weight can be imported in Garmin Connect to add entries to your history."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you store my data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Processing runs in the browser and files stay on your device."
+      }
+    }
+  ]
+}
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

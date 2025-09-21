@@ -74,7 +74,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               to select JSON files
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              Maximum {maxFiles} files • {selectedFiles.length}/{maxFiles} selected
+              Maximum {maxFiles} files - {selectedFiles.length}/{maxFiles} selected
             </p>
           </div>
         </div>
@@ -139,3 +139,5 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     </div>
   );
 };
+
+

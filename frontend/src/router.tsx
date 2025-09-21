@@ -1,45 +1,105 @@
-/**
- * Router configuration with measurements routes
- */
+import React, { Suspense } from "react";
+import { createBrowserRouter } from "react-router-dom";
+import App from "./App";
 
-import React from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
-import App from './App';
+const HomePage = React.lazy(() => import("./pages/HomePage"));
+const ProductOverviewPage = React.lazy(() => import("./pages/product/OverviewPage"));
+const ProductHowItWorksPage = React.lazy(() => import("./pages/product/HowItWorksPage"));
+const ConvertersPage = React.lazy(() => import("./pages/converters/ConvertersPage"));
+const WeightConverterPage = React.lazy(() => import("./pages/converters/WeightConverterPage"));
+const DocsPage = React.lazy(() => import("./pages/DocsPage"));
+const BlogPage = React.lazy(() => import("./pages/BlogPage"));
+const PricingPage = React.lazy(() => import("./pages/PricingPage"));
+const ContactPage = React.lazy(() => import("./pages/ContactPage"));
+const PrivacyPage = React.lazy(() => import("./pages/PrivacyPage"));
+const NotFoundPage = React.lazy(() => import("./pages/NotFoundPage"));
 
-// Lazy load measurement pages for better performance
-const MeasurementsPage = React.lazy(() => import('./pages/measurements'));
-const WeightPage = React.lazy(() => import('./pages/measurements/WeightPage'));
-const HeartRatePage = React.lazy(() => import('./pages/measurements/HeartRatePage'));
-const BodyFatPage = React.lazy(() => import('./pages/measurements/BodyFatPage'));
-const BMIPage = React.lazy(() => import('./pages/measurements/BMIPage'));
-const StepsPage = React.lazy(() => import('./pages/measurements/StepsPage'));
-const SleepPage = React.lazy(() => import('./pages/measurements/SleepPage'));
-const VO2MaxPage = React.lazy(() => import('./pages/measurements/VO2MaxPage'));
-const HydrationPage = React.lazy(() => import('./pages/measurements/HydrationPage'));
-const BloodPressurePage = React.lazy(() => import('./pages/measurements/BloodPressurePage'));
-const RestingHeartRatePage = React.lazy(() => import('./pages/measurements/RestingHeartRatePage'));
+// Coming soon converter routes will share one template (added later)
+const ComingSoonPage = React.lazy(() => import("./pages/converters/ComingSoonPage"));
+
+const AppPage = React.lazy(() => import("./pages/AppPage"));
+
+const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) => (
+  <Suspense
+    fallback={
+      <div className="flex min-h-[320px] items-center justify-center text-slate-500">
+        Loading...
+      </div>
+    }
+  >
+    <Component />
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <App />,
     children: [
       {
-        path: '',
-        element: <Navigate to="/measurements/weight" replace />
+        index: true,
+        element: withSuspense(HomePage),
       },
       {
-        path: 'measurements/:measurement',
-        element: <MeasurementsPage />
+        path: "product",
+        element: withSuspense(ProductOverviewPage),
       },
       {
-        path: 'measurements',
-        element: <Navigate to="/measurements/weight" replace />
+        path: "product/how-it-works",
+        element: withSuspense(ProductHowItWorksPage),
       },
       {
-        path: '*',
-        element: <Navigate to="/measurements/weight" replace />
-      }
-    ]
-  }
+        path: "converters",
+        element: withSuspense(ConvertersPage),
+      },
+      {
+        path: "converters/weight",
+        element: withSuspense(WeightConverterPage),
+      },
+      {
+        path: "converters/body-fat",
+        element: withSuspense(ComingSoonPage),
+      },
+      {
+        path: "converters/bmi",
+        element: withSuspense(ComingSoonPage),
+      },
+      {
+        path: "converters/resting-heart-rate",
+        element: withSuspense(ComingSoonPage),
+      },
+      {
+        path: "converters/sleep-score",
+        element: withSuspense(ComingSoonPage),
+      },
+      {
+        path: "docs",
+        element: withSuspense(DocsPage),
+      },
+      {
+        path: "blog",
+        element: withSuspense(BlogPage),
+      },
+      {
+        path: "pricing",
+        element: withSuspense(PricingPage),
+      },
+      {
+        path: "contact",
+        element: withSuspense(ContactPage),
+      },
+      {
+        path: "privacy",
+        element: withSuspense(PrivacyPage),
+      },
+      {
+        path: "app",
+        element: withSuspense(AppPage),
+      },
+      {
+        path: "*",
+        element: withSuspense(NotFoundPage),
+      },
+    ],
+  },
 ]);

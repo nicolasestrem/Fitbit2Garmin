@@ -172,7 +172,7 @@ class ApiService {
         // Partial success - don't treat as error, let caller handle
         return;
       } else if (error.response?.status && error.response.status >= 500) {
-        // Server error — surface details from API if present
+        // Server error - surface details from API if present
         const suggestion = apiError?.suggestion || 'Please try again later.';
         throw new Error(apiError?.error || apiError?.message || `Server error. ${suggestion}`);
       } else {

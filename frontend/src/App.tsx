@@ -1,12 +1,8 @@
-/**
- * Main application component - router container
- */
-
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React from "react";
+import { SiteLayout } from "./components/layout/SiteLayout";
 
 function App() {
-  return <Outlet />;
+  return <SiteLayout />;
 }
 
 export default App;

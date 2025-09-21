@@ -230,7 +230,7 @@ async function convertFitbitToGarmin(jsonFiles) {
       const result = await converter.processJsonData(jsonData, filename);
       results.push([result.filename, result.fitBytes]);
 
-      console.log(`Converted ${filename}: ${result.entryCount} weight entries → ${result.filename}`);
+      console.log(`Converted ${filename}: ${result.entryCount} weight entries -> ${result.filename}`);
     } catch (error) {
       console.error(`Failed to convert ${filename}: ${error.message}`);
       throw error;

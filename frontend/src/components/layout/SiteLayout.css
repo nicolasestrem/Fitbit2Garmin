@@ -1,0 +1,5 @@
+.site-layout { min-height:100vh; display:flex; flex-direction:column; background:#f8fafc; color:#0f172a; }
+.site-layout main { flex:1 0 auto; padding:48px 16px; }
+@media (min-width: 768px) {
+  .site-layout main { padding:64px 0 80px 0; }
+}

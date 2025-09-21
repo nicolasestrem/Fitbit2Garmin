@@ -58,7 +58,7 @@ export const DownloadManager: React.FC<DownloadManagerProps> = ({
         <div>
           <h3 className="text-lg font-medium text-gray-900">Converted Files Ready</h3>
           <p className="text-sm text-gray-500">
-            {filesConverted} files converted • {totalEntries} weight entries
+            {filesConverted} files converted - {totalEntries} weight entries
           </p>
         </div>
         <button
