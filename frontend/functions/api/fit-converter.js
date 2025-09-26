@@ -31,10 +31,76 @@ class FitbitConverter {
   }
 
   /**
-   * Convert pounds to kilograms - exact same logic as Python
+   * Detect weight unit from data sample - analyzes weight values to determine if kg or lbs
+   */
+  detectWeightUnit(data) {
+    if (!Array.isArray(data) || data.length === 0) {
+      return { unit: 'lbs', confidence: 'unknown', reason: 'No data available' };
+    }
+
+    const weights = data.map(entry => entry.weight).filter(w => typeof w === 'number' && w > 0);
+    if (weights.length === 0) {
+      return { unit: 'lbs', confidence: 'unknown', reason: 'No valid weight values' };
+    }
+
+    const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+
+    // Strong indicators for kg (most adult weights in kg are 40-200)
+    if (maxWeight < 200 && avgWeight < 150) {
+      return {
+        unit: 'kg',
+        confidence: 'high',
+        reason: `Average weight ${avgWeight.toFixed(1)}, max ${maxWeight.toFixed(1)} suggest kg`,
+        stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
+      };
+    }
+
+    // Strong indicators for lbs (most adult weights in lbs are 90-500)
+    if (minWeight > 90 && avgWeight > 150) {
+      return {
+        unit: 'lbs',
+        confidence: 'high',
+        reason: `Average weight ${avgWeight.toFixed(1)}, min ${minWeight.toFixed(1)} suggest lbs`,
+        stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
+      };
+    }
+
+    // Ambiguous range (could be heavy person in kg or light person in lbs)
+    if (avgWeight >= 150 && avgWeight <= 200) {
+      return {
+        unit: 'lbs',
+        confidence: 'medium',
+        reason: `Ambiguous range (avg ${avgWeight.toFixed(1)}), defaulting to lbs`,
+        stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
+      };
+    }
+
+    // Default to lbs for edge cases
+    return {
+      unit: 'lbs',
+      confidence: 'low',
+      reason: `Unclear pattern (avg ${avgWeight.toFixed(1)}), defaulting to lbs`,
+      stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
+    };
+  }
+
+  /**
+   * Convert pounds to kilograms
    */
   convertPoundsToKg(pounds) {
     return Math.round((pounds / 2.2046) * 10) / 10; // Round to 1 decimal place
+  }
+
+  /**
+   * Normalize weight to kg based on detected unit - replaces hardcoded pound conversion
+   */
+  normalizeWeightToKg(weight, detectedUnit) {
+    if (detectedUnit === 'kg') {
+      return Math.round(weight * 10) / 10; // Round to 1 decimal place
+    }
+    return this.convertPoundsToKg(weight);
   }
 
   /**
@@ -98,6 +164,14 @@ class FitbitConverter {
       throw new Error('Invalid Google Takeout format. Expected weight data with logId, weight, date, time fields.');
     }
 
+    // Detect weight unit from the data
+    const unitDetection = this.detectWeightUnit(jsonData);
+    console.log(`Unit detection for ${filename}:`, unitDetection);
+
+    if (unitDetection.confidence === 'low' || unitDetection.confidence === 'medium') {
+      console.warn(`⚠️ ${unitDetection.reason}. If weights appear incorrect, your Fitbit data may be in a different unit than expected.`);
+    }
+
     // Get week number for filename
     let weekYear = this.extractWeekYearFromFilename(filename);
     if (!weekYear) {
@@ -139,8 +213,8 @@ class FitbitConverter {
     for (const entry of jsonData) {
       const tsMs = this.getUnixMs(entry);
 
-      // Convert weight to kg
-      const weightKg = this.convertPoundsToKg(entry.weight);
+      // Convert weight to kg based on detected unit
+      const weightKg = this.normalizeWeightToKg(entry.weight, unitDetection.unit);
 
       // Get body fat percentage if available
       let bodyFat = entry.fat || 0.0;
@@ -180,7 +254,13 @@ class FitbitConverter {
     return {
       fitBytes,
       entryCount: weightEntries.length,
-      filename: this.getOutputFilename(filename)
+      filename: this.getOutputFilename(filename),
+      unitDetection: {
+        detectedUnit: unitDetection.unit,
+        confidence: unitDetection.confidence,
+        reason: unitDetection.reason,
+        stats: unitDetection.stats
+      }
     };
   }
 
@@ -228,9 +308,11 @@ async function convertFitbitToGarmin(jsonFiles) {
   for (const [filename, jsonData] of jsonFiles) {
     try {
       const result = await converter.processJsonData(jsonData, filename);
-      results.push([result.filename, result.fitBytes]);
+      results.push([result.filename, result.fitBytes, result.unitDetection]);
 
       console.log(`Converted ${filename}: ${result.entryCount} weight entries → ${result.filename}`);
+      console.log(`  Unit detected: ${result.unitDetection.detectedUnit} (${result.unitDetection.confidence} confidence)`);
+      console.log(`  Reason: ${result.unitDetection.reason}`);
     } catch (error) {
       console.error(`Failed to convert ${filename}: ${error.message}`);
       throw error;
