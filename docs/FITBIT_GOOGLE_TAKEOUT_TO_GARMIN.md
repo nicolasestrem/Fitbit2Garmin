@@ -1,4 +1,4 @@
-# [Archived] Fitbit Google Takeout to Garmin Converter - Technical Documentation
+# Fitbit Google Takeout to Garmin Converter - Technical Documentation
 
 ## Problem Statement
 
@@ -52,7 +52,7 @@ Each file contains an array of weight measurements:
 
 ### Key Fields
 - `logId`: Unix timestamp (already in correct format!)
-- `weight`: Weight in pounds (needs conversion to kg)
+- `weight`: Weight value (automatically detected as kg or lbs)
 - `fat`: Body fat percentage (optional)
 - `date`/`time`: Human-readable format (for validation)
 - `source`: Device source (typically "Aria")
@@ -69,7 +69,10 @@ openpyxl==2.5.12
 ### Core Conversion Logic
 
 1. **Parse JSON**: Load weight data from Google Takeout files
-2. **Convert Units**: Pounds to kilograms (`weight / 2.2046`)
+2. **Detect Units**: Automatically detect if weights are in kg or lbs based on value ranges
+   - Weights < 200 with avg < 150: Detected as kg (preserved as-is)
+   - Weights > 90 with avg > 150: Detected as lbs (converted to kg via `weight / 2.2046`)
+   - Ambiguous cases: Default to lbs with warning
 3. **Use Unix Timestamps**: Direct use of `logId` values
 4. **Create FIT Structure**:
    - FileIdMessage (type=4 for WEIGHT, manufacturer=255 for FITBIT)
@@ -132,6 +135,7 @@ Successfully converted **71 JSON files** covering **12+ years of weight data** (
 3. **Missing Fields Break Import**: Even optional fields like `number` can cause failures
 4. **Garmin Prioritizes Own Data**: Historical data imports work best
 5. **Import Success ≠ Data Visibility**: Technical validation needed beyond "import successful"
+6. **Unit Detection is Essential**: Fitbit data can be in kg or lbs depending on user settings - automatic detection prevents conversion errors
 
 ## Web Application Requirements
 
