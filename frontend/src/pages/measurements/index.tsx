@@ -6,61 +6,40 @@ import React, { Suspense } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Tabs } from '../../components/ui/Tabs';
 import { getMeasurement, type MeasurementSlug } from '../../measurements';
-// Import page components directly
-import WeightPage from './WeightPage';
-import HeartRatePage from './HeartRatePage';
-import BodyFatPage from './BodyFatPage';
-import BMIPage from './BMIPage';
-import StepsPage from './StepsPage';
-import SleepPage from './SleepPage';
-import VO2MaxPage from './VO2MaxPage';
-import HydrationPage from './HydrationPage';
-import BloodPressurePage from './BloodPressurePage';
-import RestingHeartRatePage from './RestingHeartRatePage';
+
+// Lazy load page components for code splitting
+const pageComponents: Record<MeasurementSlug, React.LazyExoticComponent<React.ComponentType<any>>> = {
+  weight: React.lazy(() => import('./WeightPage')),
+  'heart-rate': React.lazy(() => import('./HeartRatePage')),
+  'body-fat': React.lazy(() => import('./BodyFatPage')),
+  bmi: React.lazy(() => import('./BMIPage')),
+  steps: React.lazy(() => import('./StepsPage')),
+  sleep: React.lazy(() => import('./SleepPage')),
+  vo2max: React.lazy(() => import('./VO2MaxPage')),
+  hydration: React.lazy(() => import('./HydrationPage')),
+  'blood-pressure': React.lazy(() => import('./BloodPressurePage')),
+  'resting-heart-rate': React.lazy(() => import('./RestingHeartRatePage'))
+};
 
 export default function MeasurementsPage() {
   const { measurement } = useParams();
   const currentSlug = measurement as MeasurementSlug;
 
-  // Debug logging
-  console.log('MeasurementsPage rendered with measurement:', measurement);
-  console.log('Current slug:', currentSlug);
-
   // Validate the slug
   const measurementData = getMeasurement(currentSlug);
-  console.log('Measurement data:', measurementData);
 
   if (!measurementData) {
-    console.log('Invalid measurement, redirecting to weight');
     return <Navigate to="/measurements/weight" replace />;
   }
 
-  // Component mapping
+  // Get the lazy-loaded page component
+  const PageComponent = pageComponents[currentSlug];
+
   const getPageComponent = () => {
-    switch (currentSlug) {
-      case 'weight':
-        return <WeightPage />;
-      case 'heart-rate':
-        return <HeartRatePage />;
-      case 'body-fat':
-        return <BodyFatPage />;
-      case 'bmi':
-        return <BMIPage />;
-      case 'steps':
-        return <StepsPage />;
-      case 'sleep':
-        return <SleepPage />;
-      case 'vo2max':
-        return <VO2MaxPage />;
-      case 'hydration':
-        return <HydrationPage />;
-      case 'blood-pressure':
-        return <BloodPressurePage />;
-      case 'resting-heart-rate':
-        return <RestingHeartRatePage />;
-      default:
-        return <Navigate to="/measurements/weight" replace />;
+    if (!PageComponent) {
+      return <Navigate to="/measurements/weight" replace />;
     }
+    return <PageComponent />;
   };
 
   return (
