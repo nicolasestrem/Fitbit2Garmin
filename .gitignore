@@ -43,3 +43,9 @@ uploads/
 conversions/
 docs/FITBIT_GOOGLE_TAKEOUT_TO_GARMIN.md
 /frontend/dist
+wrong_conversion/input/weight-2025-07-14.json
+wrong_conversion/input/weight-2025-08-13.json
+wrong_conversion/input/weight-2025-09-12.json
+wrong_conversion/output/Weight 29-2025 Fitbit.fit
+wrong_conversion/output/Weight 33-2025 Fitbit.fit
+wrong_conversion/output/Weight 37-2025 Fitbit.fit
