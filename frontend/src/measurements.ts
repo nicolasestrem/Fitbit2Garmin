@@ -8,8 +8,7 @@ export type MeasurementSlug =
   | 'steps'
   | 'sleep'
   | 'vo2max'
-  | 'blood-pressure'
-  | 'resting-heart-rate';
+  | 'blood-pressure';
 
 export interface Measurement {
   slug: MeasurementSlug;
@@ -24,7 +23,6 @@ export const MEASUREMENTS: Array<Measurement> = [
   { slug: 'sleep', label: 'Sleep', status: 'soon' },
   { slug: 'vo2max', label: 'VO2 Max', status: 'soon' },
   { slug: 'blood-pressure', label: 'Blood Pressure', status: 'soon' },
-  { slug: 'resting-heart-rate', label: 'Resting HR', status: 'soon' }
 ];
 
 /**

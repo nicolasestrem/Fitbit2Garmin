@@ -15,7 +15,6 @@ const pageComponents: Record<MeasurementSlug, React.LazyExoticComponent<React.Co
   sleep: React.lazy(() => import('./SleepPage')),
   vo2max: React.lazy(() => import('./VO2MaxPage')),
   'blood-pressure': React.lazy(() => import('./BloodPressurePage')),
-  'resting-heart-rate': React.lazy(() => import('./RestingHeartRatePage'))
 };
 
 export default function MeasurementsPage() {
