@@ -1,6 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#3b82f6" />
+
+    <!-- Performance optimization: Preconnect to external domains -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://www.google-analytics.com" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+
+    <!-- Default meta tags (will be overridden by react-helmet-async) -->
+    <meta
+      name="description"
+      content="Convert your Fitbit data from Google Takeout to Garmin-compatible .FIT files. Free, secure, and no signup required."
+    />
+    <meta name="application-name" content="TrackerSync" />
+    <meta name="author" content="TrackerSync" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64x64.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Default title (will be overridden by react-helmet-async) -->
+    <title>TrackerSync - Free Fitbit to Garmin Converter</title>
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-97H8KS2QQ8"></script>
     <script>
@@ -10,16 +39,6 @@
 
       gtag('config', 'G-97H8KS2QQ8');
     </script>
-
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Convert your Fitbit weight data from Google Takeout to Garmin-compatible .fit files"
-    />
-    <link rel="manifest" href="/manifest.json" />
-    <title>Fitbit2Garmin</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
