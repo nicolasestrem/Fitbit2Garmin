@@ -139,8 +139,7 @@ function generateKeywords(slug: MeasurementSlug): string {
     'steps': 'step count, daily steps, activity data, step tracking, walking data, activity history, pedometer data',
     'sleep': 'sleep data, sleep stages, sleep tracking, sleep quality, rem sleep, deep sleep, sleep analysis, rest patterns',
     'vo2max': 'vo2 max, cardio fitness, aerobic capacity, fitness level, endurance, fitness assessment, athletic performance',
-    'blood-pressure': 'blood pressure, bp tracking, cardiovascular health, systolic, diastolic, health monitoring, vital signs',
-    'resting-heart-rate': 'resting heart rate, rhr, baseline heart rate, heart health, fitness baseline, recovery metrics'
+    'blood-pressure': 'blood pressure, bp tracking, cardiovascular health, systolic, diastolic, health monitoring, vital signs'
   };
 
   return `${baseKeywords}, ${slugKeywords[slug]}`;

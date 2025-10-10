@@ -235,40 +235,6 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
         }
       ]
     },
-    'resting-heart-rate': {
-      title: 'Fitbit to Garmin Resting Heart Rate | RHR Data Transfer',
-      description: 'Transfer daily resting heart rate from Fitbit to Garmin .FIT files. Convert RHR trends from Google Takeout. Maintain fitness baseline for recovery metrics.',
-      h1: 'Transfer Resting Heart Rate History from Fitbit to Garmin',
-      quickAnswer: 'Transfer daily resting heart rate measurements from Fitbit to Garmin, preserving cardiovascular fitness baseline. Enables immediate fitness age calculations, recovery time estimates, training load assessments, and stress tracking. Includes outliers from illness or intense training for complete trend analysis.',
-      keyFeatures: [
-        'Daily resting heart rate transfer',
-        'Cardiovascular fitness baseline preservation',
-        'Recovery time estimate support',
-        'Fitness age calculation enablement',
-        'Training load and stress tracking data',
-        'Complete trend including outliers'
-      ],
-      paragraphs: [
-        'Your resting heart rate is the foundation of nearly all fitness metrics. Lower RHR over time proves your cardiovascular training is working - and that trend data has immense value for future training decisions.',
-        'This converter will transfer daily resting heart rate measurements from your Fitbit to Garmin format, preserving the cardiovascular fitness baseline you\'ve established over months or years. Both Fitbit and Garmin calculate RHR from your lowest sustained heart rate during sleep or rest, making the data highly compatible between platforms.',
-        'Why RHR history matters for Garmin: This metric feeds into fitness age calculations, recovery time estimates, training load assessments, and stress tracking. Starting with historical RHR data means Garmin can immediately detect changes that might indicate overtraining, illness, or improved fitness - rather than waiting months to establish normal ranges.',
-        'The converter transfers RHR values exactly as measured, including outliers from illness or intense training periods that provide important context. Compatible with all Garmin devices that monitor heart rate 24/7 including Forerunner, Fenix, Venu, Vivoactive, and Vivosmart series.'
-      ],
-      faq: [
-        {
-          q: 'How is resting heart rate calculated differently between platforms?',
-          a: 'Both Fitbit and Garmin calculate RHR from your lowest heart rate during sleep or rest. Minor variations may occur due to different measurement windows, but trends will be consistent.'
-        },
-        {
-          q: 'Why is RHR important for Garmin metrics?',
-          a: 'Garmin uses resting heart rate for fitness age, recovery time, training load, and stress tracking. Historical RHR data improves the accuracy of all these metrics immediately.'
-        },
-        {
-          q: 'Will low or high RHR outliers transfer correctly?',
-          a: 'Yes, all recorded RHR values transfer exactly as measured. Outliers from illness or intense training will be preserved for accurate long-term trend analysis.'
-        }
-      ]
-    }
   };
 
   return contentMap[slug];
