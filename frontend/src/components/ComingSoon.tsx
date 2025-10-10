@@ -24,8 +24,7 @@ export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
     'steps': 'Steps',
     'sleep': 'Sleep',
     'vo2max': 'VO2 Max',
-    'blood-pressure': 'Blood Pressure',
-    'resting-heart-rate': 'Resting Heart Rate'
+    'blood-pressure': 'Blood Pressure'
   };
   const measurementLabel = measurementLabels[measurementSlug];
 
@@ -41,8 +40,7 @@ export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
       'steps': 'steps-2024-01-15.json',
       'sleep': 'sleep-2024-01-15.json',
       'vo2max': 'vo2_max-2024-01-15.json',
-      'blood-pressure': 'blood_pressure-2024-01-15.json',
-      'resting-heart-rate': 'resting_heart_rate-2024-01-15.json'
+      'blood-pressure': 'blood_pressure-2024-01-15.json'
     };
     return filenameMap[slug];
   };
