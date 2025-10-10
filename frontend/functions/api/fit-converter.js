@@ -225,10 +225,15 @@ class FitbitConverter {
       }
 
       // Create weight scale message - CRITICAL: Field order must match template exactly
+      // The FIT profile defines the weight field with scale=100. The Garmin SDK does
+      // not automatically apply that scaling, so we store the integer representation
+      // (e.g. 88.7kg -> 8870) to ensure Garmin displays the expected value.
+      const weightScaled = Math.round(weightKg * 100);
+
       const weightMsg = {
         mesgNum: MesgNum.WEIGHT_SCALE,
         timestamp: new Date(tsMs),
-        weight: weightKg, // SDK applies scale=100 automatically
+        weight: weightScaled,
         boneMass: 0.0,
         muscleMass: 0.0,
         percentHydration: 0.0,
