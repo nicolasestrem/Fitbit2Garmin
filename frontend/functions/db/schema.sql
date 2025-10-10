@@ -119,6 +119,53 @@ LEFT JOIN rate_limits rl ON cr.client_id = rl.client_id
 LEFT JOIN rate_limit_violations rlv ON cr.client_id = rlv.client_id
 GROUP BY cr.client_id;
 
+-- User passes/licenses for paid tiers
+CREATE TABLE user_passes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id TEXT NOT NULL,
+    pass_type TEXT NOT NULL,           -- '24h' or '7d'
+    stripe_session_id TEXT UNIQUE,
+    stripe_payment_intent TEXT,
+    amount_cents INTEGER NOT NULL,
+    currency TEXT DEFAULT 'eur',
+    purchased_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL,
+    status TEXT DEFAULT 'active',      -- 'active', 'expired', 'refunded'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_passes_client ON user_passes(client_id, status, expires_at);
+CREATE INDEX idx_passes_stripe ON user_passes(stripe_session_id);
+CREATE INDEX idx_passes_expiry ON user_passes(expires_at, status);
+
+-- Daily usage tracking (for free tier - 3 files per day limit)
+CREATE TABLE daily_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id TEXT NOT NULL,
+    date TEXT NOT NULL,                -- YYYY-MM-DD format
+    files_converted INTEGER DEFAULT 0,
+    conversions INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(client_id, date)
+);
+
+CREATE INDEX idx_daily_usage_lookup ON daily_usage(client_id, date);
+CREATE INDEX idx_daily_usage_cleanup ON daily_usage(date);
+
+-- Analytics view for pass revenue
+CREATE VIEW pass_analytics AS
+SELECT
+    pass_type,
+    DATE(purchased_at) as date,
+    COUNT(*) as passes_sold,
+    SUM(amount_cents) as revenue_cents,
+    COUNT(DISTINCT client_id) as unique_customers
+FROM user_passes
+WHERE status != 'refunded'
+GROUP BY pass_type, DATE(purchased_at);
+
 -- Cleanup procedures (to be run periodically)
 -- Note: These will be implemented in JavaScript for atomic execution
 

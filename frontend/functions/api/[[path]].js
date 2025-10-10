@@ -427,13 +427,50 @@ async function handleConvert(request, env, corsHeaders, rateLimiter, securityVal
       throw new AppError(ERROR_CODES.INTERNAL_ERROR, 'Upload ID required', 400);
     }
 
-    // Check if upload exists
+    // Check if upload exists and get file count
     const uploadMetadata = await env.RATE_LIMITS.get(`upload:${upload_id}`);
     if (!uploadMetadata) {
       throw createUploadNotFoundError(upload_id);
     }
 
     const metadata = JSON.parse(uploadMetadata);
+    const filesCount = metadata.files.length;
+
+    // Validate that there are files to convert (prevent zero-file spam)
+    if (filesCount === 0) {
+      return new Response(JSON.stringify({
+        error: "No files to convert",
+        message: "Upload must contain at least one file."
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check daily limits (3 files/day for free tier)
+    const dailyLimitCheck = await rateLimiter.checkDailyLimit(request, filesCount);
+    if (!dailyLimitCheck.allowed) {
+      const clientId = rateLimiter.getClientId(request);
+      const resetDate = new Date(dailyLimitCheck.resetTime * 1000);
+
+      return new Response(JSON.stringify({
+        error: "Daily limit reached",
+        message: `You've converted ${dailyLimitCheck.filesUsed} files today. Free tier: ${dailyLimitCheck.limit} files per day.`,
+        filesUsed: dailyLimitCheck.filesUsed,
+        filesRemaining: dailyLimitCheck.filesRemaining,
+        limit: dailyLimitCheck.limit,
+        resetTime: dailyLimitCheck.resetTime,
+        resetDate: resetDate.toISOString(),
+        upgradeUrl: "/api/create-checkout-session",
+        pricing: {
+          "24h": "€2.49 for 24-hour unlimited access",
+          "7d": "€5.99 for 7-day unlimited access"
+        }
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
     const conversionId = crypto.randomUUID();
     const failureHandler = new PartialFailureHandler();
     let totalEntries = 0;
@@ -510,6 +547,10 @@ async function handleConvert(request, env, corsHeaders, rateLimiter, securityVal
     } catch (kvError) {
       throw createStorageError('metadata', `Failed to store conversion metadata: ${kvError.message}`);
     }
+
+    // Record conversion for daily limit tracking (free tier only)
+    const clientId = rateLimiter.getClientId(request);
+    await rateLimiter.recordConversion(clientId, filesCount);
 
     // Return appropriate response based on success/failure mix
     if (failureHandler.hasFailures() && failureHandler.hasSuccesses()) {
