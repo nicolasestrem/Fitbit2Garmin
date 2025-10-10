@@ -5,7 +5,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { getSeoCopy, generateFAQJsonLD } from '../utils/seoCopy';
+import { getSeoCopy } from '../utils/seoCopy';
+import { getMeasurementMetadata, formatMetadataForHelmet } from '../utils/seoMetadata';
+import { getAllStructuredData } from '../utils/structuredData';
 import type { MeasurementSlug } from '../measurements';
 
 interface ComingSoonProps {
@@ -14,7 +16,22 @@ interface ComingSoonProps {
 
 export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
   const seoContent = getSeoCopy(measurementSlug);
-  const faqJsonLD = generateFAQJsonLD(seoContent.faq);
+
+  // Get measurement label for structured data
+  const measurementLabels: Record<MeasurementSlug, string> = {
+    'weight': 'Weight',
+    'heart-rate': 'Heart Rate',
+    'steps': 'Steps',
+    'sleep': 'Sleep',
+    'vo2max': 'VO2 Max',
+    'blood-pressure': 'Blood Pressure',
+    'resting-heart-rate': 'Resting Heart Rate'
+  };
+  const measurementLabel = measurementLabels[measurementSlug];
+
+  const metadata = getMeasurementMetadata(measurementSlug, seoContent.title, seoContent.description);
+  const helmetMetadata = formatMetadataForHelmet(metadata);
+  const structuredData = getAllStructuredData(measurementSlug, measurementLabel, seoContent.faq);
 
   // Generate example filename for the measurement
   const getExampleFilename = (slug: MeasurementSlug): string => {
@@ -32,15 +49,40 @@ export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
 
   return (
     <>
-      <Helmet>
-        <title>{seoContent.title}</title>
-        <meta name="description" content={seoContent.description} />
-        <script type="application/ld+json">
-          {faqJsonLD}
-        </script>
+      <Helmet
+        title={helmetMetadata.title}
+        link={helmetMetadata.link}
+        meta={helmetMetadata.meta}
+      >
+        {/* Structured Data - Multiple schemas for rich snippets */}
+        <script type="application/ld+json">{structuredData.organization}</script>
+        <script type="application/ld+json">{structuredData.softwareApplication}</script>
+        <script type="application/ld+json">{structuredData.webPage}</script>
+        <script type="application/ld+json">{structuredData.breadcrumb}</script>
+        <script type="application/ld+json">{structuredData.howTo}</script>
+        <script type="application/ld+json">{structuredData.faq}</script>
       </Helmet>
 
       <div className="max-w-4xl mx-auto">
+        {/* Quick Answer - AIO Optimization */}
+        <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+          <h2 className="text-sm font-semibold text-blue-900 mb-2">Quick Answer</h2>
+          <p className="text-blue-800 leading-relaxed">{seoContent.quickAnswer}</p>
+        </div>
+
+        {/* Key Features - AIO Optimization */}
+        <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Key Features</h2>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {seoContent.keyFeatures.map((feature, index) => (
+              <li key={index} className="flex items-start text-sm text-gray-700">
+                <span className="text-green-600 mr-2">✓</span>
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* Main heading */}
         <h1 className="text-3xl font-bold text-gray-900 mb-6">
           {seoContent.h1}
@@ -102,13 +144,7 @@ export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
               to="/measurements/weight"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              See how Weight import works
-            </Link>
-            <Link
-              to="/measurements/weight"
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-            >
-              Read documentation
+              Try Weight Converter Now
             </Link>
           </div>
         </div>
