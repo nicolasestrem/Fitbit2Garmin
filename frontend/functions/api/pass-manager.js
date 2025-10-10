@@ -86,8 +86,8 @@ export class PassManager {
 
       const pass = results[0];
       const expiresAt = new Date(pass.expires_at);
-      const now = new Date();
-      const hoursRemaining = Math.ceil((expiresAt - now) / (1000 * 60 * 60));
+      const nowDate = new Date();
+      const hoursRemaining = Math.ceil((expiresAt - nowDate) / (1000 * 60 * 60));
 
       return {
         passType: pass.pass_type,
