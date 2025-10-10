@@ -19,22 +19,18 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
   const contentMap: Record<MeasurementSlug, SEOContent> = {
     'weight': {
       title: 'Free Fitbit to Garmin Weight Converter | Google Takeout to FIT',
-      description: 'Convert Fitbit weight data to Garmin in seconds. Free browser-based tool transforms Google Takeout JSON to .FIT files. No signup, 100% private. Tested with 10,000+ conversions.',
+      description: 'Convert Fitbit weight data to Garmin in seconds. Free tool transforms Google Takeout JSON to .FIT files. No signup required. Tested with 10,000+ conversions.',
       h1: 'Convert Your Fitbit Weight Data to Garmin Format',
       paragraphs: [
-        'Preserve your complete weight tracking history when switching from Fitbit to Garmin. This free, browser-based converter transforms weight-YYYY-MM-DD.json files from your Fitbit Google Takeout export into Garmin-compatible .FIT files in seconds - no account required, no data uploaded.',
+        'Preserve your complete weight tracking history when switching from Fitbit to Garmin. This free converter transforms weight-YYYY-MM-DD.json files from your Fitbit Google Takeout export into Garmin-compatible .FIT files in seconds - no account required.',
         'Whether you\'ve been tracking weight loss progress for months or years, your measurements, trends, and milestones deserve to migrate with you. Upload up to 3 JSON files at once (covering approximately 3 months each) and download ready-to-import .FIT files that work with all Garmin devices and Garmin Connect.',
-        'The converter maintains measurement precision to 0.1 lbs/kg, preserves exact timestamps for accurate trend analysis, and processes everything locally in your browser for complete privacy. Successfully tested with over 10,000 user conversions, supporting data from 2010-present.',
+        'The converter maintains measurement precision to 0.1 lbs/kg and preserves exact timestamps for accurate trend analysis. Successfully tested with over 10,000 user conversions, supporting data from 2010-present.',
         'Works with weight data from any Fitbit device or Aria smart scale. Measurements sync perfectly with Garmin Index scales, Garmin watches, and the Garmin Connect mobile app or web dashboard.'
       ],
       faq: [
         {
           q: 'Is this converter free to use?',
           a: 'Yes, completely free with no hidden fees, file limits, or account requirements. Convert unlimited weight data files at no cost.'
-        },
-        {
-          q: 'Is my weight data safe and private?',
-          a: 'Absolutely. All file processing happens locally in your browser using JavaScript. Your weight data never gets uploaded to any server - it stays completely private on your device.'
         },
         {
           q: 'How do I export weight data from Fitbit?',
@@ -66,13 +62,9 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
         'Heart rate data reveals your true fitness progression - from resting heart rate improvements to training zone adaptations. When switching from Fitbit to Garmin, preserving this cardiovascular data ensures continuous health monitoring without losing years of baseline measurements.',
         'This converter will support comprehensive heart rate migration including continuous monitoring (minute-by-minute data), resting heart rate trends, heart rate zones, and daily min/max values. Whether you used a Fitbit Charge, Versa, Sense, or Inspire series, all HR data from your Google Takeout export will transfer to Garmin\'s format.',
         'Heart rate zones will map accurately between platforms since both use similar age-based calculations. Your training intensity history preserves context for Garmin\'s VO2 Max estimates, training load calculations, and recovery metrics - giving you immediate insights instead of starting from zero.',
-        'All conversions happen in your browser for complete privacy. Compatible with all Garmin devices that track heart rate including Forerunner, Fenix, Venu, Vivoactive, and Instinct series.'
+        'Compatible with all Garmin devices that track heart rate including Forerunner, Fenix, Venu, Vivoactive, and Instinct series.'
       ],
       faq: [
-        {
-          q: 'Is my heart rate data safe and private?',
-          a: 'Yes. All conversions happen locally in your browser using JavaScript - no data is ever uploaded to our servers or third parties. Your Fitbit health information remains completely private and secure on your device.'
-        },
         {
           q: 'What heart rate data will be included?',
           a: 'The converter will support resting heart rate, continuous monitoring (minute-by-minute), heart rate zones, and daily min/max values from your Fitbit export.'
@@ -99,10 +91,6 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       ],
       faq: [
         {
-          q: 'Is my step data safe and private?',
-          a: 'Yes. All conversions happen locally in your browser using JavaScript - no data is ever uploaded to our servers or third parties. Your Fitbit health information remains completely private and secure on your device.'
-        },
-        {
           q: 'How far back can I import step data?',
           a: 'There\'s no limit. If you have 5+ years of Fitbit step history in your Google Takeout, you can convert and import all of it to Garmin Connect.'
         },
@@ -127,10 +115,6 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
         'The converter handles both nighttime sleep and naps, preserving complete rest patterns. Compatible with all Garmin devices that track sleep including Forerunner, Fenix, Venu, Vivoactive, Lily, and Vivosmart series.'
       ],
       faq: [
-        {
-          q: 'Is my sleep data safe and private?',
-          a: 'Yes. All conversions happen locally in your browser using JavaScript - no data is ever uploaded to our servers or third parties. Your Fitbit health information remains completely private and secure on your device.'
-        },
         {
           q: 'Will Fitbit sleep stages match Garmin\'s format?',
           a: 'Both platforms track REM, deep, light, and awake stages. The converter maps Fitbit stages to equivalent Garmin classifications for accurate sleep architecture representation.'
@@ -157,10 +141,6 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       ],
       faq: [
         {
-          q: 'Is my VO2 Max data safe and private?',
-          a: 'Yes. All conversions happen locally in your browser using JavaScript - no data is ever uploaded to our servers or third parties. Your Fitbit health information remains completely private and secure on your device.'
-        },
-        {
           q: 'Why do Fitbit and Garmin VO2 Max estimates differ?',
           a: 'Each platform uses proprietary algorithms. The converter transfers Fitbit\'s cardio fitness data, but Garmin may recalculate VO2 Max based on its own formulas and your activity data.'
         },
@@ -186,10 +166,6 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       ],
       faq: [
         {
-          q: 'Is my blood pressure data safe and private?',
-          a: 'Yes. All conversions happen locally in your browser using JavaScript - no data is ever uploaded to our servers or third parties. Your Fitbit health information remains completely private and secure on your device.'
-        },
-        {
           q: 'Can I import blood pressure from any monitoring device?',
           a: 'Yes, as long as the readings were logged in your Fitbit account (manually or via connected device), they\'ll appear in Google Takeout and can be converted.'
         },
@@ -214,10 +190,6 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
         'The converter transfers RHR values exactly as measured, including outliers from illness or intense training periods that provide important context. Compatible with all Garmin devices that monitor heart rate 24/7 including Forerunner, Fenix, Venu, Vivoactive, and Vivosmart series.'
       ],
       faq: [
-        {
-          q: 'Is my resting heart rate data safe and private?',
-          a: 'Yes. All conversions happen locally in your browser using JavaScript - no data is ever uploaded to our servers or third parties. Your Fitbit health information remains completely private and secure on your device.'
-        },
         {
           q: 'How is resting heart rate calculated differently between platforms?',
           a: 'Both Fitbit and Garmin calculate RHR from your lowest heart rate during sleep or rest. Minor variations may occur due to different measurement windows, but trends will be consistent.'
