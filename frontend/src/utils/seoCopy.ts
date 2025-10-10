@@ -8,6 +8,8 @@ export interface SEOContent {
   title: string;
   description: string;
   h1: string;
+  quickAnswer: string; // 40-60 word answer for AIO optimization
+  keyFeatures: string[]; // Bulleted list for AI extraction
   paragraphs: string[];
   faq: Array<{ q: string; a: string }>;
 }
@@ -21,6 +23,15 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Free Fitbit to Garmin Weight Converter | Google Takeout to FIT',
       description: 'Convert Fitbit weight data to Garmin in seconds. Free tool transforms Google Takeout JSON to .FIT files. No signup required. Tested with 10,000+ conversions.',
       h1: 'Convert Your Fitbit Weight Data to Garmin Format',
+      quickAnswer: 'This free converter transforms Fitbit weight data from Google Takeout JSON files into Garmin-compatible .FIT files in seconds. Upload up to 3 files, maintain 0.1 lb/kg precision, and import directly to Garmin Connect. No signup required. Successfully tested with over 10,000 conversions since 2024.',
+      keyFeatures: [
+        'Free conversion with no account required',
+        'Upload up to 3 JSON files simultaneously',
+        'Maintains 0.1 lbs/kg measurement precision',
+        'Preserves exact timestamps for trend analysis',
+        'Compatible with all Garmin devices and Garmin Connect',
+        'Tested with 10,000+ user conversions'
+      ],
       paragraphs: [
         'Preserve your complete weight tracking history when switching from Fitbit to Garmin. This free converter transforms weight-YYYY-MM-DD.json files from your Fitbit Google Takeout export into Garmin-compatible .FIT files in seconds - no account required.',
         'Whether you\'ve been tracking weight loss progress for months or years, your measurements, trends, and milestones deserve to migrate with you. Upload up to 3 JSON files at once (covering approximately 3 months each) and download ready-to-import .FIT files that work with all Garmin devices and Garmin Connect.',
@@ -58,6 +69,15 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Fitbit to Garmin Heart Rate Converter | Import HR Data',
       description: 'Convert Fitbit heart rate zones and resting HR to Garmin .fit files. Preserve minute-by-minute data from Google Takeout. Maintain your complete cardiovascular fitness history.',
       h1: 'Migrate Heart Rate & HR Zones from Fitbit to Garmin',
+      quickAnswer: 'Convert comprehensive Fitbit heart rate data including minute-by-minute monitoring, resting HR trends, and training zones to Garmin format. Maintains cardiovascular fitness baseline for accurate VO2 Max estimates, training load calculations, and recovery metrics across all Garmin devices.',
+      keyFeatures: [
+        'Minute-by-minute heart rate data transfer',
+        'Resting heart rate trend preservation',
+        'Heart rate zone mapping between platforms',
+        'Daily min/max value retention',
+        'Compatible with all Garmin HR-enabled devices',
+        'Supports data from all Fitbit HR trackers'
+      ],
       paragraphs: [
         'Heart rate data reveals your true fitness progression - from resting heart rate improvements to training zone adaptations. When switching from Fitbit to Garmin, preserving this cardiovascular data ensures continuous health monitoring without losing years of baseline measurements.',
         'This converter will support comprehensive heart rate migration including continuous monitoring (minute-by-minute data), resting heart rate trends, heart rate zones, and daily min/max values. Whether you used a Fitbit Charge, Versa, Sense, or Inspire series, all HR data from your Google Takeout export will transfer to Garmin\'s format.',
@@ -83,6 +103,15 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Fitbit to Garmin Steps Converter | Daily Activity Import',
       description: 'Import Fitbit daily steps and hourly activity to Garmin Connect. Convert Google Takeout step data to .FIT files. Keep your activity streaks and achievements intact.',
       h1: 'Transfer Your Complete Fitbit Step History to Garmin',
+      quickAnswer: 'Preserve your complete Fitbit step history by converting daily totals and hourly activity breakdowns to Garmin Connect format. Maintains multi-year progress, seasonal patterns, and activity trends. Works with all Fitbit trackers and seamlessly imports to Garmin devices.',
+      keyFeatures: [
+        'Daily step count preservation',
+        'Hourly activity pattern transfer',
+        'Multi-year history support',
+        'No limit on data age (supports 2010-present)',
+        'Compatible with all Fitbit and Garmin devices',
+        'Maintains activity streak continuity'
+      ],
       paragraphs: [
         'You\'ve logged millions of steps on Fitbit - that achievement history deserves to migrate with you to Garmin. Don\'t let your activity streak, seasonal patterns, or multi-year progress get lost when switching fitness trackers.',
         'This step data converter will preserve daily totals, hourly activity breakdowns, and your complete walking/running history from Fitbit. Whether you hit 10,000 steps daily for years or tracked gradual activity improvements, all historical data from your Google Takeout export will transfer to Garmin Connect format.',
@@ -108,6 +137,15 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Fitbit to Garmin Sleep Converter | Sleep Stages & Quality',
       description: 'Transfer Fitbit sleep stages (REM, deep, light) to Garmin format. Convert sleep quality scores from Google Takeout. Maintain years of sleep insights and patterns.',
       h1: 'Import Fitbit Sleep Tracking to Garmin Connect',
+      quickAnswer: 'Transfer complete Fitbit sleep data including REM, deep, light, and awake stages to Garmin format. Preserves sleep duration, efficiency scores, and circadian patterns. Handles both nighttime sleep and naps. Compatible with all Garmin sleep-tracking devices.',
+      keyFeatures: [
+        'Sleep stage mapping (REM, deep, light, awake)',
+        'Sleep duration and efficiency preservation',
+        'Nighttime sleep and nap support',
+        'Time in bed vs. time asleep tracking',
+        'Compatible with all Garmin sleep trackers',
+        'Maintains years of sleep baseline data'
+      ],
       paragraphs: [
         'Sleep patterns take months to analyze meaningfully. Starting fresh with a new fitness tracker means losing crucial baseline data about your sleep quality, duration trends, and circadian rhythm patterns that took years to establish.',
         'This sleep data converter will transfer comprehensive Fitbit sleep tracking including sleep stages (REM, deep, light, awake), total sleep duration, sleep efficiency scores, and time in bed vs. time asleep. Whether you tracked with a Fitbit Alta HR, Charge, Versa, or Sense, all sleep sessions from your Google Takeout export will migrate to Garmin format.',
@@ -133,6 +171,15 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Fitbit to Garmin VO2 Max Converter | Cardio Fitness Import',
       description: 'Convert Fitbit cardio fitness scores to Garmin VO2 Max estimates. Migrate fitness level tracking from Google Takeout. Preserve training context and progress.',
       h1: 'Convert Fitbit Cardio Fitness to Garmin VO2 Max',
+      quickAnswer: 'Migrate Fitbit Cardio Fitness Score (VO2 Max estimation) to Garmin format with original timestamps. Provides immediate training guidance, race time predictions, and fitness age calculations. Enables personalized workout recommendations from day one instead of waiting months for baseline establishment.',
+      keyFeatures: [
+        'Cardio fitness score to VO2 Max conversion',
+        'Historical fitness level preservation',
+        'Training context for race predictions',
+        'Enables immediate personalized workouts',
+        'Supports all VO2 Max capable Garmin devices',
+        'Maintains multi-year fitness progression'
+      ],
       paragraphs: [
         'Cardio fitness improvements happen gradually over months and years. Your VO2 Max progression tells the story of your athletic development - and that context shouldn\'t reset when you change devices.',
         'This converter will migrate Fitbit\'s "Cardio Fitness Score" (their VO2 Max estimation) to Garmin\'s VO2 Max format. Both platforms estimate aerobic capacity based on resting heart rate, age, gender, and weight, though calculation methods differ slightly. Historical fitness level data provides critical baseline for Garmin\'s training suggestions, race time predictions, and fitness age calculations.',
@@ -158,6 +205,15 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Fitbit to Garmin Blood Pressure Converter | BP Tracking',
       description: 'Import Fitbit blood pressure readings to Garmin Connect. Convert systolic/diastolic measurements from Google Takeout. Track cardiovascular health trends seamlessly.',
       h1: 'Migrate Blood Pressure Measurements to Garmin',
+      quickAnswer: 'Transfer all Fitbit blood pressure measurements including systolic, diastolic readings, and pulse rate to Garmin Connect. Maintains medical-grade precision (1 mmHg) and exact timestamps for healthcare provider review. Supports manual entries and connected BP monitor data.',
+      keyFeatures: [
+        'Systolic and diastolic reading preservation',
+        'Pulse rate data included when available',
+        'Medical-grade 1 mmHg precision',
+        'Exact timestamp retention',
+        'Long-term trend analysis support',
+        'Compatible with Garmin Connect BP tracking'
+      ],
       paragraphs: [
         'For cardiovascular health monitoring, data continuity matters. Doctors need long-term blood pressure trends, not fragmented records across multiple devices and platforms.',
         'This converter will migrate all blood pressure measurements from your Fitbit account including systolic and diastolic readings, measurement timestamps, and pulse rate data (when recorded). Whether you manually logged BP in the Fitbit app or used a connected blood pressure monitor, all readings from your Google Takeout export will transfer to Garmin Connect.',
@@ -183,6 +239,15 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Fitbit to Garmin Resting Heart Rate | RHR Data Transfer',
       description: 'Transfer daily resting heart rate from Fitbit to Garmin .FIT files. Convert RHR trends from Google Takeout. Maintain fitness baseline for recovery metrics.',
       h1: 'Transfer Resting Heart Rate History from Fitbit to Garmin',
+      quickAnswer: 'Transfer daily resting heart rate measurements from Fitbit to Garmin, preserving cardiovascular fitness baseline. Enables immediate fitness age calculations, recovery time estimates, training load assessments, and stress tracking. Includes outliers from illness or intense training for complete trend analysis.',
+      keyFeatures: [
+        'Daily resting heart rate transfer',
+        'Cardiovascular fitness baseline preservation',
+        'Recovery time estimate support',
+        'Fitness age calculation enablement',
+        'Training load and stress tracking data',
+        'Complete trend including outliers'
+      ],
       paragraphs: [
         'Your resting heart rate is the foundation of nearly all fitness metrics. Lower RHR over time proves your cardiovascular training is working - and that trend data has immense value for future training decisions.',
         'This converter will transfer daily resting heart rate measurements from your Fitbit to Garmin format, preserving the cardiovascular fitness baseline you\'ve established over months or years. Both Fitbit and Garmin calculate RHR from your lowest sustained heart rate during sleep or rest, making the data highly compatible between platforms.',

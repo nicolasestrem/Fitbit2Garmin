@@ -1,6 +1,6 @@
 {
-  "short_name": "Fitbit2Garmin",
-  "name": "Fitbit to Garmin Converter",
+  "short_name": "TrackerSync",
+  "name": "TrackerSync - Fitbit to Garmin Converter",
   "icons": [],
   "start_url": ".",
   "display": "standalone",

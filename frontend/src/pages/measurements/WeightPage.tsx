@@ -10,6 +10,8 @@ import { ConversionProgress } from '../../components/ConversionProgress';
 import { DownloadManager } from '../../components/DownloadManager';
 import { apiService, ConversionResponse, FileValidationResult } from '../../services/api';
 import { getSeoCopy } from '../../utils/seoCopy';
+import { getMeasurementMetadata, formatMetadataForHelmet } from '../../utils/seoMetadata';
+import { getAllStructuredData } from '../../utils/structuredData';
 
 type AppState = 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error' | 'partial_success';
 
@@ -25,6 +27,9 @@ export default function WeightPage() {
   const [retryAfter, setRetryAfter] = useState<number>(0);
 
   const seoContent = getSeoCopy('weight');
+  const metadata = getMeasurementMetadata('weight', seoContent.title, seoContent.description);
+  const helmetMetadata = formatMetadataForHelmet(metadata);
+  const structuredData = getAllStructuredData('weight', 'Weight', seoContent.faq);
 
   // Initialize fingerprint on component load
   useEffect(() => {
@@ -106,12 +111,40 @@ export default function WeightPage() {
 
   return (
     <>
-      <Helmet>
-        <title>{seoContent.title}</title>
-        <meta name="description" content={seoContent.description} />
+      <Helmet
+        title={helmetMetadata.title}
+        link={helmetMetadata.link}
+        meta={helmetMetadata.meta}
+      >
+        {/* Structured Data - Multiple schemas for rich snippets */}
+        <script type="application/ld+json">{structuredData.organization}</script>
+        <script type="application/ld+json">{structuredData.softwareApplication}</script>
+        <script type="application/ld+json">{structuredData.webPage}</script>
+        <script type="application/ld+json">{structuredData.breadcrumb}</script>
+        <script type="application/ld+json">{structuredData.howTo}</script>
+        <script type="application/ld+json">{structuredData.faq}</script>
       </Helmet>
 
       <div className="max-w-4xl mx-auto">
+        {/* Quick Answer - AIO Optimization */}
+        <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+          <h2 className="text-sm font-semibold text-blue-900 mb-2">Quick Answer</h2>
+          <p className="text-blue-800 leading-relaxed">{seoContent.quickAnswer}</p>
+        </div>
+
+        {/* Key Features - AIO Optimization */}
+        <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Key Features</h2>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {seoContent.keyFeatures.map((feature, index) => (
+              <li key={index} className="flex items-start text-sm text-gray-700">
+                <span className="text-green-600 mr-2">✓</span>
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
