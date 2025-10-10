@@ -4,6 +4,7 @@
 import React, { Suspense } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import MeasurementsPage from '../src/pages/measurements';
 import { server } from './mocks/server';
 import { http, HttpResponse } from 'msw';
@@ -27,13 +28,13 @@ beforeAll(() => {
 describe('MeasurementsPage', () => {
   const renderComponent = (initialEntry: string) => {
     return render(
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Suspense fallback={<div>Loading...</div>}>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <Routes>
             <Route path="/measurements/:measurement" element={<MeasurementsPage />} />
           </Routes>
-        </Suspense>
-      </MemoryRouter>
+        </MemoryRouter>
+      </HelmetProvider>
     );
   };
 
@@ -42,6 +43,7 @@ describe('MeasurementsPage', () => {
 
     // Check for the Suspense fallback UI first
     expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: /loading/i })).toBeInTheDocument();
 
     // Wait for the lazy-loaded WeightPage component to render and check for its actual content
     await waitFor(() => {

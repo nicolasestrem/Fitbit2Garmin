@@ -50,7 +50,7 @@ class SecurityValidator {
       /\.\./,           // Directory traversal
       /[<>:"|?*]/,      // Invalid filename characters
       /[\x00-\x1f]/,    // Control characters
-      /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, // Windows reserved names
+      /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i, // Windows reserved names
     ];
 
     for (const pattern of dangerousPatterns) {

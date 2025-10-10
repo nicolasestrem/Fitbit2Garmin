@@ -139,20 +139,8 @@ export class D1RateLimiter {
       };
 
     } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-
-      console.error('D1 rate limit check failed:', error);
-
-      // Fail open for reliability
-      return {
-        rateLimited: false,
-        current: 0,
-        max: config.max,
-        failOpen: true,
-        error: error.message
-      };
+      // Re-throw the error to be handled by the IntelligentFallback mechanism
+      throw error;
     }
   }
 
