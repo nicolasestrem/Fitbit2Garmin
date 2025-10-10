@@ -39,6 +39,6 @@ export function getMeasurementsSorted(): Array<Measurement> {
   return [...MEASUREMENTS].sort((a, b) => {
     if (a.status === 'live' && b.status === 'soon') return -1;
     if (a.status === 'soon' && b.status === 'live') return 1;
-    return 0;
+    return a.label.localeCompare(b.label);
   });
 }
