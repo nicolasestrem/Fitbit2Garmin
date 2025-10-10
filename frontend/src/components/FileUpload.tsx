@@ -2,9 +2,11 @@
  * File upload component with drag-and-drop support
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { CloudArrowUpIcon, DocumentIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PassStatus } from './PassStatus';
+import { UpgradeModal } from './UpgradeModal';
 
 interface FileUploadProps {
   onFilesSelected: (files: File[]) => void;
@@ -18,6 +20,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   disabled = false,
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Handle Stripe redirect (success/cancel)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('payment_success');
+    const canceled = params.get('payment_canceled');
+
+    if (success === 'true') {
+      // Show success message
+      alert('Payment successful! Your unlimited pass is now active.');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (canceled === 'true') {
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length + selectedFiles.length > maxFiles) {
@@ -49,6 +69,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <div className="w-full">
+      {/* Pass Status Display */}
+      <div className="mb-6">
+        <PassStatus onUpgradeClick={() => setShowUpgradeModal(true)} />
+      </div>
+
       {/* Upload Area */}
       {canAddMore && (
         <div
@@ -126,16 +151,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         </ol>
       </div>
 
-      {/* Free Tier Notice commented out
-      <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
-        <p className="text-xs text-gray-600">
-          <span className="font-medium">Free Tier:</span> Convert up to 2 files per day.{' '}
-          <span className="text-blue-600 font-medium cursor-pointer hover:underline">
-            Upgrade for bulk processing
-          </span>
-        </p>
-      </div>
-      */}
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+      />
     </div>
   );
 };

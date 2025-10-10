@@ -6,6 +6,8 @@
 
 import { MultiTierRateLimiter } from './multi-tier-rate-limiter.js';
 import { IntelligentFallback } from './intelligent-fallback.js';
+import { PassManager } from './pass-manager.js';
+import { DailyLimitTracker } from './daily-limit-tracker.js';
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -28,6 +30,8 @@ class RateLimiter {
     this.env = env;
     this.multiTier = new MultiTierRateLimiter(env);
     this.fallback = new IntelligentFallback(env);
+    this.passManager = new PassManager(env);
+    this.dailyLimitTracker = new DailyLimitTracker(env);
   }
 
   /**
@@ -158,6 +162,82 @@ class RateLimiter {
     // This method exists for potential future logging/analytics
     const clientId = this.getClientId(request);
     console.log(`Rate limit: ${type} operation completed for ${clientId}`);
+  }
+
+  /**
+   * Check daily file conversion limits (3 files/day for free tier)
+   * Pass holders have unlimited conversions
+   */
+  async checkDailyLimit(request, filesCount) {
+    const clientId = this.getClientId(request);
+
+    try {
+      // Check if user has active pass (unlimited)
+      const hasPass = await this.passManager.hasActivePass(clientId);
+      if (hasPass) {
+        const passDetails = await this.passManager.getActivePass(clientId);
+        return {
+          allowed: true,
+          hasPass: true,
+          passType: passDetails?.passType,
+          expiresAt: passDetails?.expiresAt,
+          filesRemaining: 999 // Unlimited
+        };
+      }
+
+      // Check daily limit for free users
+      const canConvert = await this.dailyLimitTracker.canConvert(clientId, filesCount);
+
+      if (!canConvert.allowed) {
+        return {
+          allowed: false,
+          hasPass: false,
+          filesUsed: canConvert.filesConverted,
+          filesRemaining: canConvert.filesRemaining,
+          limit: canConvert.limit,
+          resetTime: canConvert.resetTime,
+          wouldExceed: canConvert.wouldExceed,
+          excessFiles: canConvert.excessFiles
+        };
+      }
+
+      return {
+        allowed: true,
+        hasPass: false,
+        filesUsed: canConvert.filesConverted,
+        filesRemaining: canConvert.filesRemaining,
+        limit: canConvert.limit,
+        resetTime: canConvert.resetTime
+      };
+    } catch (error) {
+      console.error('Daily limit check failed:', error);
+      // Fail open for reliability
+      return {
+        allowed: true,
+        hasPass: false,
+        error: true,
+        filesRemaining: 3
+      };
+    }
+  }
+
+  /**
+   * Record a successful conversion (for daily limit tracking)
+   */
+  async recordConversion(clientId, filesCount) {
+    try {
+      // Don't track if user has a pass
+      const hasPass = await this.passManager.hasActivePass(clientId);
+      if (hasPass) {
+        return true;
+      }
+
+      // Record for free tier users
+      return await this.dailyLimitTracker.recordConversion(clientId, filesCount);
+    } catch (error) {
+      console.error('Failed to record conversion:', error);
+      return false;
+    }
   }
 
   /**
