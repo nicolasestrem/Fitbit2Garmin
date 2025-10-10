@@ -144,13 +144,7 @@ export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
               to="/measurements/weight"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              See how Weight import works
-            </Link>
-            <Link
-              to="/measurements/weight"
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-            >
-              Read documentation
+              Try Weight Converter Now
             </Link>
           </div>
         </div>

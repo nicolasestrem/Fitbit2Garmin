@@ -44,6 +44,12 @@ const BASE_METADATA = {
 };
 
 /**
+ * Fallback OG image (1200x630px)
+ * TODO: Create specific OG images for each measurement type
+ */
+const FALLBACK_OG_IMAGE = 'https://trackersync.app/og-images/default-og.png';
+
+/**
  * Get SEO metadata for a measurement page
  */
 export function getMeasurementMetadata(
@@ -52,8 +58,9 @@ export function getMeasurementMetadata(
   pageDescription: string
 ): SEOMetadata {
   const url = `https://trackersync.app/measurements/${slug}`;
-  const ogImage = `https://trackersync.app/og-images/${slug}.png`;
-  const ogImageAlt = `Fitbit to Garmin ${slug} converter screenshot`;
+  // Use fallback OG image until specific images are created
+  const ogImage = FALLBACK_OG_IMAGE;
+  const ogImageAlt = `TrackerSync - Convert Fitbit ${slug} to Garmin`;
 
   // Generate keywords from slug
   const keywords = generateKeywords(slug);
@@ -94,7 +101,8 @@ export function getHomeMetadata(): SEOMetadata {
   const title = 'Free Fitbit to Garmin Converter | Google Takeout to FIT Files';
   const description = 'Convert Fitbit data to Garmin in seconds. Free tool transforms Google Takeout JSON to .FIT files. Weight, heart rate, sleep, steps & more. No signup required.';
   const url = 'https://trackersync.app';
-  const ogImage = 'https://trackersync.app/og-images/home.png';
+  // Use fallback OG image until homepage image is created
+  const ogImage = FALLBACK_OG_IMAGE;
   const keywords = 'fitbit to garmin, fitbit converter, google takeout, fit file converter, fitbit export, garmin import, health data migration, fitness tracker switch';
 
   return {
@@ -123,16 +131,16 @@ export function getHomeMetadata(): SEOMetadata {
  * Generate keywords based on measurement slug
  */
 function generateKeywords(slug: MeasurementSlug): string {
-  const baseKeywords = 'fitbit to garmin, fitbit converter, google takeout, fit file, garmin connect, data migration, fitness tracker';
+  const baseKeywords = 'fitbit to garmin, fitbit converter, google takeout, fit file, garmin connect, data migration, fitness tracker, health data transfer, wearable data sync, fitness data export';
 
   const slugKeywords: Record<MeasurementSlug, string> = {
-    'weight': 'weight data, weight tracking, aria scale, garmin index scale, body composition, weight loss',
-    'heart-rate': 'heart rate data, hr zones, cardio data, heart rate monitoring, fitness tracking',
-    'steps': 'step count, daily steps, activity data, step tracking, walking data',
-    'sleep': 'sleep data, sleep stages, sleep tracking, sleep quality, rem sleep, deep sleep',
-    'vo2max': 'vo2 max, cardio fitness, aerobic capacity, fitness level, endurance',
-    'blood-pressure': 'blood pressure, bp tracking, cardiovascular health, systolic, diastolic',
-    'resting-heart-rate': 'resting heart rate, rhr, baseline heart rate, heart health'
+    'weight': 'weight data, weight tracking, aria scale, garmin index scale, body composition, weight loss, body weight transfer, health metrics',
+    'heart-rate': 'heart rate data, hr zones, cardio data, heart rate monitoring, fitness tracking, cardiovascular metrics, training zones',
+    'steps': 'step count, daily steps, activity data, step tracking, walking data, activity history, pedometer data',
+    'sleep': 'sleep data, sleep stages, sleep tracking, sleep quality, rem sleep, deep sleep, sleep analysis, rest patterns',
+    'vo2max': 'vo2 max, cardio fitness, aerobic capacity, fitness level, endurance, fitness assessment, athletic performance',
+    'blood-pressure': 'blood pressure, bp tracking, cardiovascular health, systolic, diastolic, health monitoring, vital signs',
+    'resting-heart-rate': 'resting heart rate, rhr, baseline heart rate, heart health, fitness baseline, recovery metrics'
   };
 
   return `${baseKeywords}, ${slugKeywords[slug]}`;

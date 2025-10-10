@@ -18,13 +18,48 @@ export default defineConfig({
         '/measurements/blood-pressure',
         '/measurements/resting-heart-rate'
       ],
+      // Default values (overridden by routes config below)
       changefreq: 'weekly',
-      priority: 0.7,
+      priority: 0.5,
       lastmod: new Date(),
       exclude: ['/404'],
-      // Custom route priorities
       outDir: 'dist',
-      readable: true
+      readable: true,
+      // Custom priorities per route
+      routes: {
+        '/': {
+          changefreq: 'daily',
+          priority: 1.0
+        },
+        '/measurements/weight': {
+          changefreq: 'weekly',
+          priority: 0.9  // Live feature - highest priority after home
+        },
+        '/measurements/heart-rate': {
+          changefreq: 'monthly',
+          priority: 0.5  // Coming soon
+        },
+        '/measurements/steps': {
+          changefreq: 'monthly',
+          priority: 0.5  // Coming soon
+        },
+        '/measurements/sleep': {
+          changefreq: 'monthly',
+          priority: 0.5  // Coming soon
+        },
+        '/measurements/vo2max': {
+          changefreq: 'monthly',
+          priority: 0.5  // Coming soon
+        },
+        '/measurements/blood-pressure': {
+          changefreq: 'monthly',
+          priority: 0.5  // Coming soon
+        },
+        '/measurements/resting-heart-rate': {
+          changefreq: 'monthly',
+          priority: 0.5  // Coming soon
+        }
+      }
     })
   ],
   server: {

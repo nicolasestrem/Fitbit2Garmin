@@ -37,13 +37,8 @@ export function generateSoftwareApplicationSchema(): string {
       "price": "0",
       "priceCurrency": "USD"
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "10000",
-      "bestRating": "5",
-      "worstRating": "1"
-    },
+    // Note: aggregateRating removed to comply with Google's structured data guidelines
+    // Only add back when we have real user reviews with a proper review system
     "description": "Convert your Fitbit health and fitness data to Garmin-compatible .FIT files in seconds. Free, secure, and no account required.",
     "featureList": [
       "Convert weight data from Fitbit to Garmin",
@@ -78,7 +73,7 @@ export function generateWebPageSchema(
       "name": "TrackerSync",
       "url": "https://trackersync.app"
     },
-    "datePublished": "2024-01-01",
+    "datePublished": "2024-09-18", // Actual TrackerSync launch date
     "dateModified": new Date().toISOString(),
     "inLanguage": "en-US"
   };
@@ -152,28 +147,28 @@ export function generateHowToSchema(measurementType: string): string {
         "position": 1,
         "name": "Upload Fitbit files",
         "text": `Upload your ${measurementType.toLowerCase()} JSON files from Fitbit Google Takeout export`,
-        "url": "https://trackersync.app/measurements/weight#step1"
+        "url": "https://trackersync.app/measurements/weight"
       },
       {
         "@type": "HowToStep",
         "position": 2,
         "name": "Convert to Garmin format",
         "text": "Click the Convert button to transform your data to .FIT format",
-        "url": "https://trackersync.app/measurements/weight#step2"
+        "url": "https://trackersync.app/measurements/weight"
       },
       {
         "@type": "HowToStep",
         "position": 3,
         "name": "Download .FIT files",
         "text": "Download the converted .FIT files to your device",
-        "url": "https://trackersync.app/measurements/weight#step3"
+        "url": "https://trackersync.app/measurements/weight"
       },
       {
         "@type": "HowToStep",
         "position": 4,
         "name": "Import to Garmin Connect",
         "text": "Upload the .FIT files to Garmin Connect through the Import Data feature",
-        "url": "https://trackersync.app/measurements/weight#step4"
+        "url": "https://trackersync.app/measurements/weight"
       }
     ]
   };
