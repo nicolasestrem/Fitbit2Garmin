@@ -119,7 +119,7 @@ export function generateBreadcrumbSchema(
 /**
  * HowTo schema - describes step-by-step conversion process
  */
-export function generateHowToSchema(measurementType: string): string {
+export function generateHowToSchema(measurementType: string, measurementSlug: MeasurementSlug): string {
   const schema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
@@ -147,28 +147,28 @@ export function generateHowToSchema(measurementType: string): string {
         "position": 1,
         "name": "Upload Fitbit files",
         "text": `Upload your ${measurementType.toLowerCase()} JSON files from Fitbit Google Takeout export`,
-        "url": "https://trackersync.app/measurements/weight"
+        "url": `https://trackersync.app/measurements/${measurementSlug}`
       },
       {
         "@type": "HowToStep",
         "position": 2,
         "name": "Convert to Garmin format",
         "text": "Click the Convert button to transform your data to .FIT format",
-        "url": "https://trackersync.app/measurements/weight"
+        "url": `https://trackersync.app/measurements/${measurementSlug}`
       },
       {
         "@type": "HowToStep",
         "position": 3,
         "name": "Download .FIT files",
         "text": "Download the converted .FIT files to your device",
-        "url": "https://trackersync.app/measurements/weight"
+        "url": `https://trackersync.app/measurements/${measurementSlug}`
       },
       {
         "@type": "HowToStep",
         "position": 4,
         "name": "Import to Garmin Connect",
         "text": "Upload the .FIT files to Garmin Connect through the Import Data feature",
-        "url": "https://trackersync.app/measurements/weight"
+        "url": `https://trackersync.app/measurements/${measurementSlug}`
       }
     ]
   };
@@ -221,7 +221,7 @@ export function getAllStructuredData(
     softwareApplication: generateSoftwareApplicationSchema(),
     webPage: generateWebPageSchema(url, name, description),
     breadcrumb: generateBreadcrumbSchema(measurementSlug, measurementLabel),
-    howTo: generateHowToSchema(measurementLabel),
+    howTo: generateHowToSchema(measurementLabel, measurementSlug),
     faq: generateFAQSchema(faq)
   };
 }
