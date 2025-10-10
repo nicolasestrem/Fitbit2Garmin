@@ -65,7 +65,8 @@ export default function MeasurementsPage() {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" role="status" aria-label="loading"></div>
+            <span className="ml-4 text-lg font-medium text-gray-700">Loading...</span>
           </div>
         }>
           {getPageComponent()}
