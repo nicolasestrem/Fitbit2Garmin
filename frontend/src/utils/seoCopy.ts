@@ -23,7 +23,7 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
       title: 'Free Fitbit to Garmin Weight Converter | Google Takeout to FIT',
       description: 'Convert Fitbit weight data to Garmin in seconds. Free tool transforms Google Takeout JSON to .FIT files. No signup required. Tested with 10,000+ conversions.',
       h1: 'Convert Your Fitbit Weight Data to Garmin Format',
-      quickAnswer: 'This free converter transforms Fitbit weight data from Google Takeout JSON files into Garmin-compatible .FIT files in seconds. Upload up to 3 files, maintain 0.1 lb/kg precision, and import directly to Garmin Connect. No signup required. Successfully tested with over 10,000 conversions since 2024.',
+      quickAnswer: 'This converter transforms Fitbit weight data from Google Takeout JSON files into Garmin-compatible .FIT files in seconds. Upload up to 3 files, maintain 0.1 lb/kg precision, and import directly to Garmin Connect. No signup required.',
       keyFeatures: [
         'Free conversion with no account required',
         'Upload up to 3 JSON files simultaneously',
