@@ -5,12 +5,9 @@
 export type MeasurementSlug =
   | 'weight'
   | 'heart-rate'
-  | 'body-fat'
-  | 'bmi'
   | 'steps'
   | 'sleep'
   | 'vo2max'
-  | 'hydration'
   | 'blood-pressure'
   | 'resting-heart-rate';
 
@@ -23,12 +20,9 @@ export interface Measurement {
 export const MEASUREMENTS: Array<Measurement> = [
   { slug: 'weight', label: 'Weight', status: 'live' },
   { slug: 'heart-rate', label: 'Heart Rate', status: 'soon' },
-  { slug: 'body-fat', label: 'Body Fat', status: 'soon' },
-  { slug: 'bmi', label: 'BMI', status: 'soon' },
   { slug: 'steps', label: 'Steps', status: 'soon' },
   { slug: 'sleep', label: 'Sleep', status: 'soon' },
   { slug: 'vo2max', label: 'VO2 Max', status: 'soon' },
-  { slug: 'hydration', label: 'Hydration', status: 'soon' },
   { slug: 'blood-pressure', label: 'Blood Pressure', status: 'soon' },
   { slug: 'resting-heart-rate', label: 'Resting HR', status: 'soon' }
 ];
