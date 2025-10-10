@@ -11,12 +11,9 @@ import { getMeasurement, type MeasurementSlug } from '../../measurements';
 const pageComponents: Record<MeasurementSlug, React.LazyExoticComponent<React.ComponentType<any>>> = {
   weight: React.lazy(() => import('./WeightPage')),
   'heart-rate': React.lazy(() => import('./HeartRatePage')),
-  'body-fat': React.lazy(() => import('./BodyFatPage')),
-  bmi: React.lazy(() => import('./BMIPage')),
   steps: React.lazy(() => import('./StepsPage')),
   sleep: React.lazy(() => import('./SleepPage')),
   vo2max: React.lazy(() => import('./VO2MaxPage')),
-  hydration: React.lazy(() => import('./HydrationPage')),
   'blood-pressure': React.lazy(() => import('./BloodPressurePage')),
   'resting-heart-rate': React.lazy(() => import('./RestingHeartRatePage'))
 };
