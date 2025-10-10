@@ -34,6 +34,11 @@ export interface Pricing {
   };
 }
 
+export interface ApiErrorResponse {
+  error: string;
+  message: string;
+}
+
 /**
  * Create a Stripe checkout session
  * @param passType - '24h' or '7d'
@@ -50,7 +55,7 @@ export async function createCheckoutSession(passType: '24h' | '7d'): Promise<Che
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as ApiErrorResponse;
       throw new Error(error.message || 'Failed to create checkout session');
     }
 
@@ -76,7 +81,7 @@ export async function getPassStatus(): Promise<PassStatus> {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as ApiErrorResponse;
       throw new Error(error.message || 'Failed to get pass status');
     }
 

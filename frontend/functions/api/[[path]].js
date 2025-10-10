@@ -436,6 +436,17 @@ async function handleConvert(request, env, corsHeaders, rateLimiter, securityVal
     const metadata = JSON.parse(uploadMetadata);
     const filesCount = metadata.files.length;
 
+    // Validate that there are files to convert (prevent zero-file spam)
+    if (filesCount === 0) {
+      return new Response(JSON.stringify({
+        error: "No files to convert",
+        message: "Upload must contain at least one file."
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // Check daily limits (3 files/day for free tier)
     const dailyLimitCheck = await rateLimiter.checkDailyLimit(request, filesCount);
     if (!dailyLimitCheck.allowed) {

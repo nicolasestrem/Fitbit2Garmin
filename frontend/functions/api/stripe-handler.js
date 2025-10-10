@@ -44,7 +44,9 @@ export class StripeHandler {
               product_data: {
                 name: `Fitbit2Garmin ${price.name}`,
                 description: `Unlimited file conversions for ${price.duration} hours`,
-                images: ['https://fitbit2garmin.app/logo.png'] // Replace with your logo
+                // TODO: Replace with actual logo URL or make configurable via env variable
+                // If logo file doesn't exist, Stripe will show product name only
+                images: ['https://fitbit2garmin.app/logo.png']
               },
               unit_amount: price.cents
             },
@@ -115,6 +117,18 @@ export class StripeHandler {
         throw new Error('Missing required metadata in session');
       }
 
+      // Check if payment intent is available
+      // Note: payment_intent can be null if payment is still pending
+      // In production, this should be handled by waiting for payment_intent.succeeded event
+      if (!paymentIntent) {
+        console.warn('Payment intent is null - payment may be pending', {
+          sessionId: session.id,
+          paymentStatus: session.payment_status
+        });
+        // For now, use session ID as fallback
+        // TODO: Consider handling this via payment_intent.succeeded webhook instead
+      }
+
       // Create the pass in database
       const result = await this.passManager.createPass(
         clientId,
@@ -152,17 +166,18 @@ export class StripeHandler {
         return false;
       }
 
-      // Find the pass associated with this payment intent
-      // and mark it as refunded
-      // Note: We need to query by payment intent, not session ID
-      // This requires a database lookup
       console.log('Processing refund for payment intent:', paymentIntent);
 
-      // Mark pass as refunded (this will be handled in the database)
-      // For now, log the refund - you may want to extend PassManager
-      // to handle refunds by payment intent
+      // Mark the pass as refunded using payment intent
+      const success = await this.passManager.refundPassByPaymentIntent(paymentIntent);
 
-      return true;
+      if (success) {
+        console.log(`Successfully revoked pass for refunded payment: ${paymentIntent}`);
+        return true;
+      } else {
+        console.warn(`Could not find pass to refund for payment intent: ${paymentIntent}`);
+        return false;
+      }
     } catch (error) {
       console.error('Failed to handle charge refund:', error);
       return false;

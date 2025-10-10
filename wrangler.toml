@@ -13,6 +13,10 @@ VITE_API_URL = "/api"
 # Set to your actual Stripe publishable key:
 # - Development: pk_test_... (from Stripe Dashboard → Developers → API keys)
 # - Production: pk_live_... (after going live)
+#
+# ⚠️  WARNING: This is currently a TEST key!
+# ⚠️  Replace with your LIVE key (pk_live_...) before deploying to production!
+# ⚠️  Using test keys in production will prevent real payments from processing.
 STRIPE_PUBLISHABLE_KEY = "pk_test_51QQQWsLHgP1P5b6RByqOBV6pSyDnTlxn5DxIJxOp7zzB3jCd88fL5yE8hGCyRNYMYMULxHuMEeQF8cBQ8qLLqcbF00tKxdCmKF"
 
 # Stripe secrets (set via: wrangler secret put STRIPE_SECRET_KEY)

@@ -11,11 +11,16 @@ export class DailyLimitTracker {
 
   /**
    * Get current UTC date in YYYY-MM-DD format
-   * @returns {string}
+   *
+   * IMPORTANT: This method uses UTC timezone explicitly.
+   * Daily limits reset at midnight UTC (00:00 UTC).
+   * Cloudflare Workers run in UTC by default, which is relied upon here.
+   *
+   * @returns {string} Current date in YYYY-MM-DD format (UTC)
    */
   getCurrentDate() {
     const now = new Date();
-    return now.toISOString().split('T')[0]; // YYYY-MM-DD
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD in UTC
   }
 
   /**

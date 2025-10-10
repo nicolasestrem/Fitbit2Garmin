@@ -118,6 +118,10 @@ export class PassManager {
       const duration = passType === '24h' ? 24 : 168; // 24 hours or 7 days
       const expiresAt = new Date(now.getTime() + duration * 60 * 60 * 1000);
 
+      // Clear cache BEFORE insertion to prevent race condition
+      // where another request reads stale data between insert and cache clear
+      await this.kv.delete(`pass:${clientId}`);
+
       await this.db.prepare(`
         INSERT INTO user_passes (
           client_id,
@@ -139,9 +143,6 @@ export class PassManager {
         expiresAt.toISOString()
       ).run();
 
-      // Clear cache to force refresh
-      await this.kv.delete(`pass:${clientId}`);
-
       return {
         success: true,
         passType,
@@ -155,7 +156,7 @@ export class PassManager {
   }
 
   /**
-   * Mark a pass as refunded
+   * Mark a pass as refunded by session ID
    * @param {string} stripeSessionId - Stripe checkout session ID
    * @returns {Promise<boolean>}
    */
@@ -177,6 +178,35 @@ export class PassManager {
       return false;
     } catch (error) {
       console.error('Failed to refund pass:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Mark a pass as refunded by payment intent ID
+   * @param {string} paymentIntent - Stripe payment intent ID
+   * @returns {Promise<boolean>}
+   */
+  async refundPassByPaymentIntent(paymentIntent) {
+    try {
+      const result = await this.db.prepare(`
+        UPDATE user_passes
+        SET status = 'refunded', updated_at = datetime('now')
+        WHERE stripe_payment_intent = ?
+        RETURNING client_id
+      `).bind(paymentIntent).first();
+
+      if (result) {
+        // Clear cache
+        await this.kv.delete(`pass:${result.client_id}`);
+        console.log(`Pass refunded for payment intent ${paymentIntent}, client: ${result.client_id}`);
+        return true;
+      }
+
+      console.warn(`No pass found for payment intent: ${paymentIntent}`);
+      return false;
+    } catch (error) {
+      console.error('Failed to refund pass by payment intent:', error);
       return false;
     }
   }
