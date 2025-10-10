@@ -45,7 +45,13 @@
       "Bash(npx tsc:*)",
       "Bash(npm run dev:*)",
       "mcp__cloudflare-builds__accounts_list",
-      "mcp__cloudflare-builds__set_active_account"
+      "mcp__cloudflare-builds__set_active_account",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh api:*)",
+      "Bash(git fetch:*)",
+      "Bash(npx wrangler pages functions build:*)"
     ],
     "deny": [],
     "ask": []
