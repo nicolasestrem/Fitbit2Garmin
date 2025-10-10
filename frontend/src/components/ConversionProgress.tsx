@@ -1,10 +1,19 @@
 /**
- * Conversion progress and status component
+ * @file Conversion progress and status component.
+ * This component displays the status of a file conversion process, including progress, success, and error states.
  */
 
 import React from 'react';
 import { CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
+/**
+ * @interface ConversionProgressProps
+ * @description Props for the ConversionProgress component.
+ * @property {'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error' | 'partial_success'} status - The current status of the conversion process.
+ * @property {string} [message] - An optional message to override the default status message.
+ * @property {number} [progress] - The progress of the conversion, from 0 to 100.
+ * @property {string} [error] - An error message to display if the status is 'error'.
+ */
 interface ConversionProgressProps {
   status: 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error' | 'partial_success';
   message?: string;
@@ -12,12 +21,22 @@ interface ConversionProgressProps {
   error?: string;
 }
 
+/**
+ * A React component that displays the progress and status of a file conversion process.
+ * It provides visual feedback for different states like loading, success, error, and progress percentage.
+ * @param {ConversionProgressProps} props - The component props.
+ * @returns {React.ReactElement | null} The rendered component, or null if the status is 'idle'.
+ */
 export const ConversionProgress: React.FC<ConversionProgressProps> = ({
   status,
   message,
   progress = 0,
   error,
 }) => {
+  /**
+   * Returns the appropriate icon based on the current conversion status.
+   * @returns {React.ReactElement | null} The status icon.
+   */
   const getStatusIcon = () => {
     switch (status) {
       case 'completed':
@@ -36,6 +55,10 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
     }
   };
 
+  /**
+   * Returns the appropriate color classes based on the current conversion status.
+   * @returns {string} The Tailwind CSS classes for colors.
+   */
   const getStatusColor = () => {
     switch (status) {
       case 'completed':
@@ -54,6 +77,11 @@ export const ConversionProgress: React.FC<ConversionProgressProps> = ({
     }
   };
 
+  /**
+   * Returns the appropriate status message based on the current conversion status.
+   * Uses the `message` prop if provided, otherwise returns a default message.
+   * @returns {string} The status message.
+   */
   const getStatusMessage = () => {
     if (message) return message;
 

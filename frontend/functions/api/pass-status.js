@@ -1,15 +1,20 @@
 /**
- * Pass Status Endpoint
- * Route: GET /api/pass-status
- *
- * Returns current user's pass status (active pass or free tier)
+ * @file Pass Status Endpoint
+ * @description Cloudflare Pages Function for retrieving a user's current pass status.
+ * Handles GET requests to `/api/pass-status`.
  */
 
 import { PassManager } from './pass-manager.js';
 import { RateLimiter } from './rate-limiter.js';
 
 /**
- * Get pass status for current user
+ * Handles requests to get the current user's pass status.
+ * It determines if the user has an active premium pass or is on the free tier.
+ * @param {object} context - The Cloudflare Pages request context.
+ * @param {Request} context.request - The incoming request object.
+ * @param {object} context.env - The environment variables and bindings.
+ * @returns {Promise<Response>} A promise that resolves to a Response object with the
+ * user's pass status or an error.
  */
 export async function onRequest(context) {
   const { request, env } = context;
@@ -20,12 +25,12 @@ export async function onRequest(context) {
     'Access-Control-Allow-Headers': 'Content-Type'
   };
 
-  // Handle preflight
+  // Handle preflight (OPTIONS) requests for CORS.
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  // Only allow GET
+  // Ensure the request method is GET.
   if (request.method !== 'GET') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
@@ -34,13 +39,15 @@ export async function onRequest(context) {
   }
 
   try {
-    // Get client ID (IP address)
+    // Get the client's unique identifier.
     const rateLimiter = new RateLimiter(env);
     const clientId = rateLimiter.getClientId(request);
 
+    // Check for an active pass.
     const passManager = new PassManager(env);
     const activePass = await passManager.getActivePass(clientId);
 
+    // If no active pass is found, return the free tier status.
     if (!activePass) {
       return new Response(JSON.stringify({
         hasPass: false,
@@ -53,6 +60,7 @@ export async function onRequest(context) {
       });
     }
 
+    // If an active pass is found, return its details.
     return new Response(JSON.stringify({
       hasPass: true,
       passType: activePass.passType,
@@ -64,6 +72,7 @@ export async function onRequest(context) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    // Log and return a generic error response if something goes wrong.
     console.error('Pass status check error:', error);
     return new Response(JSON.stringify({
       error: 'Failed to check pass status',

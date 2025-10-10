@@ -1,8 +1,15 @@
+/**
+ * @file Unit tests for the MultiTierRateLimiter class.
+ * @description This suite tests the interaction between the different tiers of the
+ * rate limiting system (KV cache, D1 database, R2 analytics). It uses mocks
+ * to verify that caching, database lookups, and analytics queuing behave as expected
+ * under various conditions.
+ */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { MultiTierRateLimiter } from '../../api/multi-tier-rate-limiter.js';
 import { AppError } from '../../api/error-handler.js';
 
-describe('MultiTierRateLimiter', () => {
+describe('MultiTierRateLimiter Unit Tests', () => {
   let multiTierLimiter;
   let mockD1Limiter;
   let mockKV;

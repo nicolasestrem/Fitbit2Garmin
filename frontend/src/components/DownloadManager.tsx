@@ -1,11 +1,21 @@
 /**
- * Download manager component for converted FIT files
+ * @file Download manager component for converted FIT files.
+ * This component displays a list of downloadable files from a conversion,
+ * manages their download state, and provides functionality to download single or all files.
  */
 
 import React, { useState } from 'react';
 import { ArrowDownTrayIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
 
+/**
+ * @interface DownloadManagerProps
+ * @description Props for the DownloadManager component.
+ * @property {string} conversionId - The unique identifier for the conversion process.
+ * @property {string[]} downloadUrls - A list of URLs for the converted files.
+ * @property {number} filesConverted - The number of files that were successfully converted.
+ * @property {number} totalEntries - The total number of data entries processed.
+ */
 interface DownloadManagerProps {
   conversionId: string;
   downloadUrls: string[];
@@ -13,6 +23,13 @@ interface DownloadManagerProps {
   totalEntries: number;
 }
 
+/**
+ * A React component that manages the downloading of converted FIT files.
+ * It displays a list of files, tracks download status for each, and allows
+ * for downloading all files at once.
+ * @param {DownloadManagerProps} props - The component props.
+ * @returns {React.ReactElement} The rendered download manager.
+ */
 export const DownloadManager: React.FC<DownloadManagerProps> = ({
   conversionId,
   downloadUrls,
@@ -22,6 +39,11 @@ export const DownloadManager: React.FC<DownloadManagerProps> = ({
   const [downloadStatus, setDownloadStatus] = useState<Record<string, 'pending' | 'downloading' | 'completed'>>({});
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
 
+  /**
+   * Downloads a single file from the given URL.
+   * It updates the download status of the file and handles potential errors.
+   * @param {string} url - The URL of the file to download.
+   */
   const downloadFile = async (url: string) => {
     const filename = url.split('/').pop() || 'converted-file.fit';
 
@@ -39,6 +61,10 @@ export const DownloadManager: React.FC<DownloadManagerProps> = ({
     }
   };
 
+  /**
+   * Downloads all available files sequentially.
+   * It sets a global downloading state and adds a small delay between each download.
+   */
   const downloadAll = async () => {
     setIsDownloadingAll(true);
     for (const url of downloadUrls) {

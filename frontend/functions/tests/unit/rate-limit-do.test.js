@@ -1,7 +1,13 @@
+/**
+ * @file Unit tests for the RateLimitDO and AtomicRateLimiter classes.
+ * @description This suite tests the Durable Object's internal logic for atomic rate
+ * limiting and the helper class used to interact with it. It uses mocks for the
+ * Durable Object state and environment to ensure isolated testing.
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RateLimitDO, AtomicRateLimiter } from '../../api/rate-limit-do.js';
 
-describe('RateLimitDO', () => {
+describe('RateLimitDO (Durable Object)', () => {
   let rateLimitDO;
   let mockState;
   let mockEnv;

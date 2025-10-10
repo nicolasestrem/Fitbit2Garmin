@@ -1,21 +1,36 @@
 /**
- * SEO content generator for measurement pages
+ * @file SEO content generator for measurement pages.
+ * This file contains all the copy (text content) used for the measurement-specific
+ * pages, optimized for search engines and user information.
  */
 
 import type { MeasurementSlug } from '../measurements';
 
+/**
+ * @interface SEOContent
+ * @description Defines the structure for all SEO-related content for a measurement page.
+ * @property {string} title - The title tag for the page.
+ * @property {string} description - The meta description for the page.
+ * @property {string} h1 - The main heading (H1) of the page.
+ * @property {string} quickAnswer - A concise, 40-60 word answer for AIO (Answer-in-One) optimization.
+ * @property {string[]} keyFeatures - A bulleted list of key features for AI extraction and rich snippets.
+ * @property {string[]} paragraphs - The main body paragraphs of the page.
+ * @property {Array<{ q: string; a: string }>} faq - An array of frequently asked questions and their answers.
+ */
 export interface SEOContent {
   title: string;
   description: string;
   h1: string;
-  quickAnswer: string; // 40-60 word answer for AIO optimization
-  keyFeatures: string[]; // Bulleted list for AI extraction
+  quickAnswer: string;
+  keyFeatures: string[];
   paragraphs: string[];
   faq: Array<{ q: string; a: string }>;
 }
 
 /**
- * Generate SEO content for a measurement type
+ * Retrieves the SEO and page content for a specific measurement type.
+ * @param {MeasurementSlug} slug - The unique identifier for the measurement type.
+ * @returns {SEOContent} The complete set of SEO and page content for the given slug.
  */
 export function getSeoCopy(slug: MeasurementSlug): SEOContent {
   const contentMap: Record<MeasurementSlug, SEOContent> = {
@@ -241,7 +256,10 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
 }
 
 /**
- * Generate JSON-LD structured data for FAQ section
+ * Generates JSON-LD structured data for an FAQ section.
+ * This helps search engines understand the content and display it as rich snippets.
+ * @param {Array<{ q: string; a: string }>} faq - An array of question-answer objects.
+ * @returns {string} A JSON string representing the FAQPage schema.
  */
 export function generateFAQJsonLD(faq: Array<{ q: string; a: string }>): string {
   const faqStructuredData = {

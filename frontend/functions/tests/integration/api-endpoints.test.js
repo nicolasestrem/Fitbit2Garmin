@@ -1,3 +1,10 @@
+/**
+ * @file Integration tests for the main API endpoints.
+ * @description This file contains integration tests for the Cloudflare Pages function
+ * that handles all API routes. It uses `vitest` to mock requests and environment
+ * dependencies (like KV and R2) to test various scenarios, including successful
+ * operations, error conditions, and security checks.
+ */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { onRequest } from '../../api/[[path]].js';
 import { createFileError } from '../../api/error-handler.js';

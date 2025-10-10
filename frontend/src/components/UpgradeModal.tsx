@@ -1,11 +1,20 @@
 /**
- * Upgrade Modal - Purchase unlimited passes
- * Displays pricing options and redirects to Stripe checkout
+ * @file Upgrade Modal - Purchase unlimited passes.
+ * This component displays pricing options and handles the process of redirecting to Stripe for checkout.
  */
 
 import React, { useState, useEffect } from 'react';
 import { redirectToCheckout, getPricing, type Pricing } from '../services/payment';
 
+/**
+ * @interface UpgradeModalProps
+ * @description Props for the UpgradeModal component.
+ * @property {boolean} isOpen - Whether the modal is currently open.
+ * @property {() => void} onClose - Callback function to close the modal.
+ * @property {number} [filesUsed=0] - The number of free files the user has already used.
+ * @property {number} [filesRemaining=0] - The number of free files the user has remaining.
+ * @property {number} [resetTime] - The timestamp when the free tier limit will reset.
+ */
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,6 +23,13 @@ interface UpgradeModalProps {
   resetTime?: number;
 }
 
+/**
+ * A React component that displays a modal for purchasing unlimited passes.
+ * It fetches pricing information, presents different pass options, and
+ * initiates the Stripe checkout process.
+ * @param {UpgradeModalProps} props - The component props.
+ * @returns {React.ReactElement | null} The rendered modal, or null if it's not open.
+ */
 export function UpgradeModal({
   isOpen,
   onClose,
@@ -31,6 +47,9 @@ export function UpgradeModal({
     }
   }, [isOpen]);
 
+  /**
+   * Fetches pricing data from the payment service and updates the state.
+   */
   const loadPricing = async () => {
     try {
       const pricingData = await getPricing();
@@ -40,6 +59,10 @@ export function UpgradeModal({
     }
   };
 
+  /**
+   * Handles the upgrade process by initiating a redirect to the Stripe checkout page.
+   * @param {'24h' | '7d'} passType - The type of pass selected by the user.
+   */
   const handleUpgrade = async (passType: '24h' | '7d') => {
     setIsLoading(true);
     setSelectedPass(passType);

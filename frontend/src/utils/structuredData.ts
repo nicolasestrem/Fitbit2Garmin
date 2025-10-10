@@ -1,12 +1,15 @@
 /**
- * Schema.org structured data generators for SEO and rich snippets
- * Supports multiple schema types for comprehensive search engine understanding
+ * @file Schema.org structured data generators for SEO and rich snippets.
+ * This utility provides functions to create various types of JSON-LD structured data,
+ * which helps search engines understand the content and context of the pages.
  */
 
 import type { MeasurementSlug } from '../measurements';
 
 /**
- * Organization schema - describes the website/brand
+ * Generates the JSON-LD for the `Organization` schema.
+ * This describes the website/brand.
+ * @returns {string} A JSON string representing the Organization schema.
  */
 export function generateOrganizationSchema(): string {
   const schema = {
@@ -23,7 +26,9 @@ export function generateOrganizationSchema(): string {
 }
 
 /**
- * SoftwareApplication schema - describes the converter tool
+ * Generates the JSON-LD for the `SoftwareApplication` schema.
+ * This describes the converter tool itself.
+ * @returns {string} A JSON string representing the SoftwareApplication schema.
  */
 export function generateSoftwareApplicationSchema(): string {
   const schema = {
@@ -37,8 +42,6 @@ export function generateSoftwareApplicationSchema(): string {
       "price": "0",
       "priceCurrency": "USD"
     },
-    // Note: aggregateRating removed to comply with Google's structured data guidelines
-    // Only add back when we have real user reviews with a proper review system
     "description": "Convert your Fitbit health and fitness data to Garmin-compatible .FIT files in seconds. Free, secure, and no account required.",
     "featureList": [
       "Convert weight data from Fitbit to Garmin",
@@ -55,7 +58,12 @@ export function generateSoftwareApplicationSchema(): string {
 }
 
 /**
- * WebPage schema - describes individual pages
+ * Generates the JSON-LD for the `WebPage` schema.
+ * This describes an individual page.
+ * @param {string} url - The canonical URL of the page.
+ * @param {string} name - The title of the page.
+ * @param {string} description - The meta description of the page.
+ * @returns {string} A JSON string representing the WebPage schema.
  */
 export function generateWebPageSchema(
   url: string,
@@ -73,7 +81,7 @@ export function generateWebPageSchema(
       "name": "TrackerSync",
       "url": "https://trackersync.app"
     },
-    "datePublished": "2024-09-18", // Actual TrackerSync launch date
+    "datePublished": "2024-09-18",
     "dateModified": new Date().toISOString(),
     "inLanguage": "en-US"
   };
@@ -82,7 +90,11 @@ export function generateWebPageSchema(
 }
 
 /**
- * BreadcrumbList schema - describes navigation hierarchy
+ * Generates the JSON-LD for the `BreadcrumbList` schema.
+ * This describes the navigation hierarchy of the page.
+ * @param {MeasurementSlug} measurementSlug - The slug of the current measurement.
+ * @param {string} measurementLabel - The display label of the current measurement.
+ * @returns {string} A JSON string representing the BreadcrumbList schema.
  */
 export function generateBreadcrumbSchema(
   measurementSlug: MeasurementSlug,
@@ -117,7 +129,11 @@ export function generateBreadcrumbSchema(
 }
 
 /**
- * HowTo schema - describes step-by-step conversion process
+ * Generates the JSON-LD for the `HowTo` schema.
+ * This describes the step-by-step process of using the converter.
+ * @param {string} measurementType - The display name of the measurement (e.g., "Weight").
+ * @param {MeasurementSlug} measurementSlug - The slug of the measurement.
+ * @returns {string} A JSON string representing the HowTo schema.
  */
 export function generateHowToSchema(measurementType: string, measurementSlug: MeasurementSlug): string {
   const schema = {
@@ -177,8 +193,10 @@ export function generateHowToSchema(measurementType: string, measurementSlug: Me
 }
 
 /**
- * FAQPage schema - describes FAQ section (already exists in seoCopy.ts)
- * This is a wrapper to maintain consistency
+ * Generates the JSON-LD for the `FAQPage` schema.
+ * This is a wrapper for consistency, as the primary generation might be elsewhere.
+ * @param {Array<{ q: string; a: string }>} faq - An array of question-answer objects.
+ * @returns {string} A JSON string representing the FAQPage schema.
  */
 export function generateFAQSchema(faq: Array<{ q: string; a: string }>): string {
   const schema = {
@@ -198,7 +216,11 @@ export function generateFAQSchema(faq: Array<{ q: string; a: string }>): string 
 }
 
 /**
- * Get all structured data for a measurement page
+ * Compiles all relevant structured data for a measurement page into a single object.
+ * @param {MeasurementSlug} measurementSlug - The slug of the measurement.
+ * @param {string} measurementLabel - The display label of the measurement.
+ * @param {Array<{ q: string; a: string }>} faq - The FAQ data for the page.
+ * @returns {{organization: string, softwareApplication: string, webPage: string, breadcrumb: string, howTo: string, faq: string}} An object containing all generated JSON-LD strings.
  */
 export function getAllStructuredData(
   measurementSlug: MeasurementSlug,

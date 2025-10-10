@@ -1,5 +1,7 @@
 /**
- * Accessible tabs component with keyboard navigation and mobile select fallback
+ * @file Accessible tabs component with keyboard navigation and mobile select fallback.
+ * This component renders a set of tabs for navigating between different measurement types.
+ * It supports WAI-ARIA practices for tabs, including keyboard navigation.
  */
 
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
@@ -7,11 +9,24 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { MEASUREMENTS, type MeasurementSlug } from '../../measurements';
 import styles from './Tabs.module.css';
 
+/**
+ * @interface TabsProps
+ * @description Props for the Tabs component.
+ * @property {MeasurementSlug} activeTab - The slug of the currently active tab.
+ * @property {string} [basePath='/measurements'] - The base path for the tab routes.
+ */
 interface TabsProps {
   activeTab: MeasurementSlug;
   basePath?: string;
 }
 
+/**
+ * A React component that provides an accessible tab navigation system.
+ * It includes keyboard support for arrow keys, home, and end, and falls back
+ * to a select dropdown on smaller screens.
+ * @param {TabsProps} props - The component props.
+ * @returns {React.ReactElement} The rendered tabs component.
+ */
 export const Tabs: React.FC<TabsProps> = ({
   activeTab,
   basePath = '/measurements'
@@ -23,21 +38,30 @@ export const Tabs: React.FC<TabsProps> = ({
 
   const activeIndex = MEASUREMENTS.findIndex(m => m.slug === activeTab);
 
+  /**
+   * Handles the click event on a tab. Navigates to the corresponding route
+   * if the tab is not disabled.
+   * @param {MeasurementSlug} measurement - The slug of the clicked measurement.
+   * @param {'live' | 'soon'} status - The status of the measurement.
+   */
   const handleTabClick = (measurement: MeasurementSlug, status: 'live' | 'soon') => {
-    // Don't navigate if tab is disabled (coming soon)
     if (status === 'soon') return;
     navigate(`${basePath}/${measurement}`);
   };
 
+  /**
+   * Handles keyboard navigation for the tab list, implementing WAI-ARIA patterns.
+   * Supports ArrowLeft, ArrowRight, Home, End, Enter, and Space keys.
+   * @param {KeyboardEvent<HTMLDivElement>} event - The keyboard event.
+   */
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const { key } = event;
     const currentIndex = activeIndex;
 
     switch (key) {
-      case 'ArrowLeft':
+      case 'ArrowLeft': {
         event.preventDefault();
         let prevIndex = currentIndex > 0 ? currentIndex - 1 : MEASUREMENTS.length - 1;
-        // Skip disabled tabs
         while (MEASUREMENTS[prevIndex].status === 'soon' && prevIndex !== currentIndex) {
           prevIndex = prevIndex > 0 ? prevIndex - 1 : MEASUREMENTS.length - 1;
         }
@@ -46,11 +70,10 @@ export const Tabs: React.FC<TabsProps> = ({
           navigate(`${basePath}/${MEASUREMENTS[prevIndex].slug}`);
         }
         break;
-
-      case 'ArrowRight':
+      }
+      case 'ArrowRight': {
         event.preventDefault();
         let nextIndex = currentIndex < MEASUREMENTS.length - 1 ? currentIndex + 1 : 0;
-        // Skip disabled tabs
         while (MEASUREMENTS[nextIndex].status === 'soon' && nextIndex !== currentIndex) {
           nextIndex = nextIndex < MEASUREMENTS.length - 1 ? nextIndex + 1 : 0;
         }
@@ -59,27 +82,25 @@ export const Tabs: React.FC<TabsProps> = ({
           navigate(`${basePath}/${MEASUREMENTS[nextIndex].slug}`);
         }
         break;
-
-      case 'Home':
+      }
+      case 'Home': {
         event.preventDefault();
-        // Find first live tab
         const firstLiveIndex = MEASUREMENTS.findIndex(m => m.status === 'live');
         if (firstLiveIndex !== -1) {
           setFocusedTab(firstLiveIndex);
           navigate(`${basePath}/${MEASUREMENTS[firstLiveIndex].slug}`);
         }
         break;
-
-      case 'End':
+      }
+      case 'End': {
         event.preventDefault();
-        // Find last live tab
         const lastLiveIndex = MEASUREMENTS.length - 1 - [...MEASUREMENTS].reverse().findIndex(m => m.status === 'live');
         if (lastLiveIndex >= 0) {
           setFocusedTab(lastLiveIndex);
           navigate(`${basePath}/${MEASUREMENTS[lastLiveIndex].slug}`);
         }
         break;
-
+      }
       case 'Enter':
       case ' ':
         event.preventDefault();
@@ -90,7 +111,9 @@ export const Tabs: React.FC<TabsProps> = ({
     }
   };
 
-  // Focus management for keyboard navigation
+  /**
+   * Effect hook to manage focus on tab buttons during keyboard navigation.
+   */
   useEffect(() => {
     if (focusedTab >= 0 && tabListRef.current) {
       const tabButton = tabListRef.current.children[focusedTab] as HTMLButtonElement;
@@ -100,11 +123,18 @@ export const Tabs: React.FC<TabsProps> = ({
     }
   }, [focusedTab]);
 
-  // Reset focused tab when route changes
+  /**
+   * Effect hook to reset the focused tab index when the route changes.
+   */
   useEffect(() => {
     setFocusedTab(-1);
   }, [location.pathname]);
 
+  /**
+   * A small badge component to display the status ('live' or 'soon') of a tab.
+   * @param {{ status: 'live' | 'soon' }} props - The props for the component.
+   * @returns {React.ReactElement} The rendered status badge.
+   */
   const StatusBadge: React.FC<{ status: 'live' | 'soon' }> = ({ status }) => (
     <span
       className={`${styles.badge} ${status === 'live' ? styles.badgeLive : styles.badgeSoon}`}

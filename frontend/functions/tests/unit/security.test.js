@@ -1,8 +1,19 @@
+/**
+ * @file Unit tests for the SecurityValidator class.
+ * @description This suite tests the security validation logic, including filename
+ * sanitization, content validation, and checks for suspicious activity. It uses
+ * mocks for KV storage to test blocking and rate-limiting-related security features.
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SecurityValidator, SECURITY_CONFIG } from '../../api/security.js';
 import { AppError } from '../../api/error-handler.js';
 
-// Helper to create a mock request object
+/**
+ * Creates a mock Request object for testing purposes.
+ * @param {object} [headers={}] - An object representing request headers.
+ * @param {string} [url='https://example.com/api/upload'] - The request URL.
+ * @returns {object} A mock request object.
+ */
 const createMockRequest = (headers = {}, url = 'https://example.com/api/upload') => {
     const headerMap = new Map(Object.entries(headers));
     return {
@@ -14,7 +25,7 @@ const createMockRequest = (headers = {}, url = 'https://example.com/api/upload')
     };
   };
 
-describe('SecurityValidator', () => {
+describe('SecurityValidator Unit Tests', () => {
   let securityValidator;
   let mockEnv;
   let mockKV;
