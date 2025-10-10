@@ -237,6 +237,18 @@ export function getSeoCopy(slug: MeasurementSlug): SEOContent {
     },
   };
 
+  if (!contentMap[slug]) {
+    return {
+      title: 'Unsupported Measurement | Body Fat % Calculator',
+      description: 'This measurement is not yet supported.',
+      h1: 'Unsupported Measurement',
+      quickAnswer: 'This measurement type is not yet supported by our converter.',
+      keyFeatures: [],
+      paragraphs: [],
+      faq: [],
+    };
+  }
+
   return contentMap[slug];
 }
 
