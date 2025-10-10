@@ -9,6 +9,19 @@ ENVIRONMENT = "production"
 # (e.g., "https://api.example.com/api") to route conversions to Python.
 # Leave as "/api" to call Cloudflare Pages Functions.
 VITE_API_URL = "/api"
+# Stripe publishable key (safe to expose in client-side code)
+# Set to your actual Stripe publishable key:
+# - Development: pk_test_... (from Stripe Dashboard → Developers → API keys)
+# - Production: pk_live_... (after going live)
+#
+# ⚠️  WARNING: This is currently a TEST key!
+# ⚠️  Replace with your LIVE key (pk_live_...) before deploying to production!
+# ⚠️  Using test keys in production will prevent real payments from processing.
+STRIPE_PUBLISHABLE_KEY = "pk_test_51QQQWsLHgP1P5b6RByqOBV6pSyDnTlxn5DxIJxOp7zzB3jCd88fL5yE8hGCyRNYMYMULxHuMEeQF8cBQ8qLLqcbF00tKxdCmKF"
+
+# Stripe secrets (set via: wrangler secret put STRIPE_SECRET_KEY)
+# STRIPE_SECRET_KEY - your Stripe secret key
+# STRIPE_WEBHOOK_SECRET - webhook signing secret from Stripe dashboard
 
 [[kv_namespaces]]
 binding = "RATE_LIMITS"

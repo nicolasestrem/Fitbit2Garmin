@@ -16,7 +16,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@garmin/fitsdk": "^21.178.0"
+    "@garmin/fitsdk": "^21.178.0",
+    "stripe": "^14.25.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
