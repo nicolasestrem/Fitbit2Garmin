@@ -1,3 +1,10 @@
+/**
+ * @file D1 Database Schema
+ * @description This SQL script defines the complete database schema for the TrackerSync
+ * application, including tables for rate limiting, user passes, and analytics.
+ * It is designed to be used with Cloudflare's D1 database service.
+ */
+
 -- =============================================================================
 -- Schema for TrackerSync Rate Limiting & Usage Database
 -- =============================================================================

@@ -1,5 +1,8 @@
 /**
- * Test suite for the MeasurementsPage component and its lazy loading.
+ * @file Integration tests for the MeasurementsPage component.
+ * @description This suite tests the lazy loading functionality of the MeasurementsPage,
+ * ensuring that the Suspense fallback is displayed correctly while the child page
+ * component (e.g., WeightPage) is being loaded.
  */
 import React, { Suspense } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -26,6 +29,12 @@ beforeAll(() => {
 });
 
 describe('MeasurementsPage', () => {
+  /**
+   * Renders the MeasurementsPage component within a test environment,
+   * including providers for routing and helmet.
+   * @param {string} initialEntry - The initial URL path for the MemoryRouter.
+   * @returns {import('@testing-library/react').RenderResult} The result from React Testing Library's render function.
+   */
   const renderComponent = (initialEntry: string) => {
     return render(
       <HelmetProvider>

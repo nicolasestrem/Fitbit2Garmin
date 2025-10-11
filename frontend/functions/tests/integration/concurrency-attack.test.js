@@ -1,3 +1,10 @@
+/**
+ * @file Integration tests for concurrency attack vectors.
+ * @description This suite simulates various concurrency-based attacks against the
+ * RateLimitDO (Durable Object) to ensure its atomicity and resilience. It tests for
+ * race conditions, resource exhaustion, and other time-based vulnerabilities.
+ */
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RateLimitDO } from '../../api/rate-limit-do.js';
 

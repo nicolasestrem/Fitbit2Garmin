@@ -1,3 +1,9 @@
+<!--
+@file Main project README file.
+@description This file provides a comprehensive overview of the TrackerSync application,
+including its purpose, features, technology stack, and setup instructions for developers.
+-->
+
 # TrackerSync: Fitbit to Garmin Data Converter
 
 **TrackerSync** is a web-based tool that converts your Fitbit data from a Google Takeout export into Garmin-compatible `.FIT` files. This allows you to seamlessly migrate your historical health and fitness data when switching from a Fitbit device to a Garmin device, preserving your long-term trends and insights.
@@ -8,24 +14,24 @@
 
 ## Features
 
-- **Google Takeout Compatibility**: Directly processes `JSON` files from your Fitbit Google Takeout export.
-- **Accurate Conversions**: Uses the official `@garmin/fitsdk` to generate valid and accurate `.FIT` files.
-- **Multiple Data Types**: Supports conversion for various health metrics (see "Supported Data" below).
-- **Batch Processing**: Upload and convert multiple files at once.
-- **Serverless Architecture**: Runs entirely on the Cloudflare ecosystem (Pages, Functions, R2, D1, and KV) for high availability and scalability.
-- **Secure & Private**: Your health data is processed securely and is not stored long-term.
-- **User-Friendly Interface**: Simple, step-by-step process to convert and download your data.
+-   **Google Takeout Compatibility**: Directly processes `JSON` files from your Fitbit Google Takeout export.
+-   **Accurate Conversions**: Uses the official `@garmin/fitsdk` to generate valid and accurate `.FIT` files.
+-   **Multiple Data Types**: Supports conversion for various health metrics (see "Supported Data" below).
+-   **Batch Processing**: Upload and convert multiple files at once.
+-   **Serverless Architecture**: Runs entirely on the Cloudflare ecosystem (Pages, Functions, R2, D1, and KV) for high availability and scalability.
+-   **Secure & Private**: Your health data is processed securely and is not stored long-term.
+-   **User-Friendly Interface**: Simple, step-by-step process to convert and download your data.
 
 ## Supported Data Types
 
-| Data Type | Status | Description |
-| :--- | :--- | :--- |
-| **Weight** | ✅ **Live** | Converts weight, body fat, and timestamps. |
-| **Heart Rate** | 🟡 **Coming Soon** | Will convert resting HR, and daily/intraday HR data. |
-| **Steps** | 🟡 **Coming Soon** | Will convert daily and intraday step counts. |
-| **Sleep** | 🟡 **Coming Soon** | Will convert sleep stages, duration, and quality scores. |
-| **VO2 Max** | 🟡 **Coming Soon** | Will convert Cardio Fitness Score to VO2 Max estimates. |
-| **Blood Pressure** | 🟡 **Coming Soon** | Will convert systolic and diastolic measurements. |
+| Data Type        | Status         | Description                                          |
+| :--------------- | :------------- | :--------------------------------------------------- |
+| **Weight**       | ✅ **Live**      | Converts weight, body fat, and timestamps.           |
+| **Heart Rate**   | 🟡 **Coming Soon** | Will convert resting HR, and daily/intraday HR data. |
+| **Steps**        | 🟡 **Coming Soon** | Will convert daily and intraday step counts.         |
+| **Sleep**        | 🟡 **Coming Soon** | Will convert sleep stages, duration, and quality.    |
+| **VO2 Max**      | 🟡 **Coming Soon** | Will convert Cardio Fitness Score to VO2 Max.        |
+| **Blood Pressure** | 🟡 **Coming Soon** | Will convert systolic and diastolic measurements.    |
 
 ## How to Use the App
 
@@ -37,13 +43,13 @@
 
 ## Technology Stack
 
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS
-- **Backend**: Cloudflare Pages Functions (JavaScript)
-- **Storage**:
-    - **R2**: For temporary file uploads and converted `.FIT` files.
-    - **D1**: For atomic rate limiting and user pass management.
-    - **KV**: For caching rate limit data and session information.
-- **Payments**: Stripe for handling premium passes.
+-   **Frontend**: React, TypeScript, Vite, Tailwind CSS
+-   **Backend**: Cloudflare Pages Functions (JavaScript/Node.js)
+-   **Storage**:
+    -   **R2**: For temporary file uploads and converted `.FIT` files.
+    -   **D1**: For atomic rate limiting and user pass management.
+    -   **KV**: For caching rate limit data and session information.
+-   **Payments**: Stripe for handling premium passes.
 
 ## Project Structure
 
@@ -52,30 +58,33 @@
 ├── docs/                # Detailed architecture, deployment, and troubleshooting guides
 ├── frontend/
 │   ├── functions/       # Cloudflare Pages Functions (the serverless backend)
-│   │   └── api/         # API route handlers
+│   │   ├── api/         # API route handlers for endpoints like /api/upload
+│   │   ├── db/          # D1 database schema and migration scripts
+│   │   └── tests/       # Integration and unit tests for the backend
+│   ├── public/          # Static assets (icons, robots.txt, etc.)
 │   ├── src/             # Frontend React application source code
 │   │   ├── components/  # Reusable React components
 │   │   ├── pages/       # Page components corresponding to routes
 │   │   ├── services/    # Services for API communication, payments, etc.
 │   │   └── utils/       # Utility functions (SEO, analytics, etc.)
-│   └── tests/           # Vitest tests for the frontend
+│   └── tests/           # Vitest tests for the frontend components
 └── wrangler.toml        # Cloudflare configuration file
 ```
 
-## Development Setup
+## Getting Started for Developers
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18 or later)
-- [npm](https://www.npmjs.com/) (or your preferred package manager)
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) for running locally and deploying.
+-   [Node.js](https://nodejs.org/) (v18 or later)
+-   [npm](https://www.npmjs.com/) (or your preferred package manager)
+-   [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) for running locally and deploying.
 
 ### Installation
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-repo/trackersync.git
-    cd trackersync
+    git clone https://github.com/nicolasestrem/fitbit-to-garmin.git
+    cd fitbit-to-garmin
     ```
 
 2.  **Install frontend dependencies:**
@@ -104,12 +113,14 @@ The app will be available at `http://localhost:5173`.
 This runs the full application, including the serverless backend functions. This requires you to have your Cloudflare environment configured locally.
 
 First, build the frontend:
+
 ```bash
 cd frontend
 npm run build
 ```
 
 Then, run the Pages dev server from the root directory:
+
 ```bash
 npx wrangler pages dev frontend/dist
 ```
@@ -133,6 +144,7 @@ The application uses `wrangler.toml` for Cloudflare configuration and a `.dev.va
 Deployment is handled via the Wrangler CLI. See `docs/DEPLOYMENT.md` for detailed instructions.
 
 A typical deployment command looks like this:
+
 ```bash
 # First, build the frontend application
 cd frontend
@@ -142,14 +154,24 @@ npm run build
 npx wrangler pages deploy frontend/dist --project-name=trackersync
 ```
 
-## Documentation
+## Key Documentation
 
 For more in-depth information, please refer to the `docs/` directory:
 
-- `docs/ARCHITECTURE.md`: System design, API structure, and storage schema.
-- `docs/DEPLOYMENT.md`: Detailed deployment and environment setup guide.
-- `docs/TROUBLESHOOTING.md`: Common issues and solutions.
-- `docs/CHANGELOG.md`: A log of changes and new features.
+-   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): System design, API structure, and storage schema.
+-   [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md): Detailed deployment and environment setup guide.
+-   [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md): Common issues and solutions.
+-   [`docs/RATE_LIMITING_ARCHITECTURE.md`](docs/RATE_LIMITING_ARCHITECTURE.md): A deep dive into the multi-tier rate limiting system.
+-   [`docs/PAYMENT_SYSTEM.md`](docs/PAYMENT_SYSTEM.md): An overview of the Stripe integration for premium passes.
+-   [`docs/CHANGELOG.md`](docs/CHANGELOG.md): A log of changes and new features.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

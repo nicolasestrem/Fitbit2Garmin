@@ -1,7 +1,14 @@
+/**
+ * @file Vitest global setup for the frontend test environment.
+ * @description This file configures the test environment before any tests run.
+ * It sets up the Mock Service Worker (MSW) server to intercept API requests,
+ * mocks global objects like `window.location` and `crypto`, and silences
+ * console logging during tests to keep the output clean.
+ */
 import '@testing-library/jest-dom';
 import { server } from './mocks/server';
 
-// Establish API mocking before all tests
+// Establish API mocking before all tests.
 beforeAll(() => server.listen());
 
 // Reset any request handlers that we may add during the tests

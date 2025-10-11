@@ -1,3 +1,11 @@
+/**
+ * @file Integration tests for load testing and performance analysis.
+ * @description This suite simulates various load conditions to test the API's
+ * performance, resilience, and resource management. It covers burst traffic,
+ * sustained load, large file handling, and graceful degradation during
+ * backend failures.
+ */
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { onRequest } from '../../api/[[path]].js';
 

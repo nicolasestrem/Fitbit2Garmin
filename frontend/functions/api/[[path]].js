@@ -102,11 +102,11 @@ export async function onRequest(context) {
 
 /**
  * Handles requests for usage data.
- * NOTE: This is currently mocked as fingerprinting is disabled.
  * @param {Request} request - The incoming request.
  * @param {object} env - The environment variables.
  * @param {object} corsHeaders - CORS headers to include in the response.
  * @returns {Promise<Response>} The response with usage data.
+ * @note This is currently mocked as fingerprinting is disabled.
  */
 async function handleUsage(request, env, corsHeaders) {
   const url = new URL(request.url);
