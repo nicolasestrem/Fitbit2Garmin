@@ -1,30 +1,33 @@
 /**
- * Multi-Tier Rate Limiting Architecture
- * Combines D1 (atomic), KV (cache), and R2 (analytics) for optimal performance
- *
- * Tier 1: KV Cache - Fast lookups for recent rate limit checks
- * Tier 2: D1 Database - Atomic operations and authoritative source
- * Tier 3: R2 Storage - Long-term analytics and audit logs
+ * @file Multi-Tier Rate Limiting Architecture
+ * @description This module combines D1 (for atomic operations), KV (for caching),
+ * and R2 (for analytics) to create a high-performance, resilient rate limiting system.
+ * - **Tier 1: KV Cache** - Fast lookups for recent rate limit checks.
+ * - **Tier 2: D1 Database** - The authoritative source for rate limit counts, using atomic operations.
+ * - **Tier 3: R2 Storage** - Long-term storage for analytics and audit logs.
  */
 
 import { D1RateLimiter } from './d1-rate-limiter.js';
 import { AppError } from './error-handler.js';
 
+/**
+ * Implements a multi-layered rate limiting strategy.
+ */
 export class MultiTierRateLimiter {
+  /**
+   * Creates an instance of MultiTierRateLimiter.
+   * @param {object} env - The Cloudflare environment object.
+   */
   constructor(env) {
     this.d1Limiter = new D1RateLimiter(env);
     this.kv = env.RATE_LIMITS;
     this.r2 = env.FILE_STORAGE;
-
-    // Cache configuration
     this.cacheConfig = {
       ttl: 300, // 5 minutes
       prefix: 'rl:',
       statusPrefix: 'st:',
       reputationPrefix: 'rep:'
     };
-
-    // R2 analytics configuration
     this.analyticsConfig = {
       batchSize: 100,
       flushInterval: 60000, // 1 minute
@@ -33,7 +36,13 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Primary rate limit check with intelligent caching
+   * Performs a rate limit check using an intelligent caching strategy.
+   * It checks the KV cache first. On a miss, it queries the D1 database and caches the result.
+   * @param {string} clientId - The client identifier.
+   * @param {string} endpoint - The endpoint being accessed.
+   * @param {object} [metadata={}] - Additional metadata for the request.
+   * @returns {Promise<object>} The result of the rate limit check.
+   * @throws {AppError} If the rate limit is exceeded.
    */
   async checkRateLimit(clientId, endpoint, metadata = {}) {
     const cacheKey = `${this.cacheConfig.prefix}${clientId}:${endpoint}`;
@@ -132,7 +141,11 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Get cached rate limit result
+   * Retrieves a rate limit result from the KV cache if it's recent enough.
+   * @param {string} cacheKey - The key for the KV cache.
+   * @param {number} minTimestamp - The minimum valid timestamp for the cached entry.
+   * @returns {Promise<object|null>} The cached data or null.
+   * @private
    */
   async getCachedResult(cacheKey, minTimestamp) {
     try {
@@ -148,7 +161,10 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Update KV cache with rate limit data
+   * Updates the KV cache with new rate limit data.
+   * @param {string} cacheKey - The key for the KV cache.
+   * @param {object} data - The data to cache.
+   * @private
    */
   async updateCache(cacheKey, data) {
     try {
@@ -161,7 +177,9 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Get comprehensive status from all tiers
+   * Gets a comprehensive status report for a client, combining data from all tiers.
+   * @param {string} clientId - The client identifier.
+   * @returns {Promise<object>} The combined status report.
    */
   async getStatus(clientId) {
     try {
@@ -187,7 +205,9 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Get client reputation with caching
+   * Retrieves a client's reputation, using KV as a cache for the D1 data.
+   * @param {string} clientId - The client identifier.
+   * @returns {Promise<object>} The client's reputation data.
    */
   async getClientReputation(clientId) {
     const cacheKey = `${this.cacheConfig.reputationPrefix}${clientId}`;
@@ -226,7 +246,10 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Get cache statistics for client
+   * Calculates cache hit/miss statistics for a client's recent requests.
+   * @param {string} clientId - The client identifier.
+   * @returns {Promise<object>} An object with cache statistics.
+   * @private
    */
   async getCacheStats(clientId) {
     try {
@@ -253,7 +276,12 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Queue analytics data for R2 storage
+   * Queues an analytics event to an in-memory buffer to be flushed to R2.
+   * @param {string} clientId - The client identifier.
+   * @param {string} endpoint - The endpoint of the request.
+   * @param {object} result - The result of the rate limit check.
+   * @param {object} metadata - Additional metadata about the request.
+   * @private
    */
   queueAnalytics(clientId, endpoint, result, metadata) {
     try {
@@ -285,7 +313,8 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Flush analytics buffer to R2 storage
+   * Flushes the in-memory analytics buffer to a file in R2 storage.
+   * @returns {Promise<void>}
    */
   async flushAnalytics() {
     if (this.analyticsConfig.buffer.length === 0) return;
@@ -325,7 +354,10 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Reset limits across all tiers
+   * Resets rate limits for a client across all tiers (D1 and KV).
+   * @param {string} clientId - The client identifier.
+   * @param {string|null} [endpoint=null] - The specific endpoint to reset, or all if null.
+   * @returns {Promise<object>} The result of the reset operation.
    */
   async resetLimits(clientId, endpoint = null) {
     try {
@@ -355,7 +387,9 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Get analytics from R2 storage
+   * Retrieves analytics data, combining recent data from D1 with historical trends from R2.
+   * @param {string} [timeframe='24h'] - The time frame for the analytics ('24h' or '7d').
+   * @returns {Promise<object>} Combined analytics data.
    */
   async getAnalytics(timeframe = '24h') {
     try {
@@ -377,7 +411,10 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Get analytics data from R2 storage
+   * Fetches and aggregates analytics data from R2 storage for a given time frame.
+   * @param {string} timeframe - The time frame to fetch data for.
+   * @returns {Promise<object>} Aggregated analytics data from R2.
+   * @private
    */
   async getR2Analytics(timeframe) {
     try {
@@ -408,7 +445,10 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Aggregate R2 analytics data
+   * Aggregates raw analytics data from multiple R2 files into a summary object.
+   * @param {Array<object>} files - An array of analytics file contents.
+   * @returns {object} A summary of the analytics data.
+   * @private
    */
   aggregateR2Analytics(files) {
     const summary = {
@@ -440,7 +480,8 @@ export class MultiTierRateLimiter {
   }
 
   /**
-   * Periodic maintenance across all tiers
+   * Performs periodic maintenance tasks across all tiers, such as D1 cleanup and flushing analytics.
+   * @returns {Promise<object>} A summary of the maintenance operations.
    */
   async performMaintenance() {
     try {

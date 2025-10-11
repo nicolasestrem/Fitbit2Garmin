@@ -1,9 +1,16 @@
 /**
- * Browser fingerprinting service for abuse prevention
+ * @file Browser fingerprinting service for abuse prevention.
+ * This service uses FingerprintJS and fallback methods to create a unique
+ * identifier for the user's browser, which can be used for rate limiting
+ * and preventing abuse.
  */
 
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
+/**
+ * @interface FingerprintData
+ * @description Represents the data collected for browser fingerprinting.
+ */
 export interface FingerprintData {
   fingerprint_hash: string;
   user_agent: string;
@@ -11,12 +18,21 @@ export interface FingerprintData {
   timezone: string;
 }
 
+/**
+ * A service for generating and managing browser fingerprints.
+ * It uses a combination of FingerprintJS and custom fallback logic.
+ */
 class FingerprintService {
   private fingerprintPromise: Promise<any> | null = null;
+  private cachedFingerprint: FingerprintData | null = null;
 
+  /**
+   * Generates a detailed browser fingerprint.
+   * It first tries to use FingerprintJS and falls back to a custom method if it fails.
+   * @returns {Promise<FingerprintData>} A promise that resolves to the fingerprint data.
+   */
   async generateFingerprint(): Promise<FingerprintData> {
     try {
-      // Initialize FingerprintJS if not already done
       if (!this.fingerprintPromise) {
         this.fingerprintPromise = FingerprintJS.load();
       }
@@ -24,7 +40,6 @@ class FingerprintService {
       const fp = await this.fingerprintPromise;
       const result = await fp.get();
 
-      // Generate composite fingerprint data
       const fingerprintData: FingerprintData = {
         fingerprint_hash: result.visitorId,
         user_agent: navigator.userAgent,
@@ -34,7 +49,7 @@ class FingerprintService {
 
       return fingerprintData;
     } catch (error) {
-      console.error('Error generating fingerprint:', error);
+      console.error('Error generating fingerprint with FingerprintJS, using fallback:', error);
 
       // Fallback fingerprint using basic browser properties
       const fallbackData = {
@@ -56,13 +71,18 @@ class FingerprintService {
     }
   }
 
+  /**
+   * Creates a fingerprint string from the browser's canvas element.
+   * This is used as part of the fallback fingerprinting mechanism.
+   * @returns {string} A data URL representing the canvas content, or an error string.
+   * @private
+   */
   private getCanvasFingerprint(): string {
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return 'no-canvas';
 
-      // Draw some text and shapes for fingerprinting
       ctx.textBaseline = 'top';
       ctx.font = '14px Arial';
       ctx.fillText('Fitbit to Garmin Converter 🏃‍♂️', 2, 2);
@@ -76,6 +96,13 @@ class FingerprintService {
     }
   }
 
+  /**
+   * Hashes a string using the SHA-256 algorithm.
+   * Falls back to a simple non-cryptographic hash if the Web Crypto API is unavailable.
+   * @param {string} str - The string to hash.
+   * @returns {Promise<string>} A promise that resolves to the hex-encoded hash string.
+   * @private
+   */
   private async hashString(str: string): Promise<string> {
     try {
       const encoder = new TextEncoder();
@@ -95,9 +122,11 @@ class FingerprintService {
     }
   }
 
-  // Cache fingerprint for session
-  private cachedFingerprint: FingerprintData | null = null;
-
+  /**
+   * Retrieves the fingerprint from a session cache if available,
+   * otherwise generates a new one.
+   * @returns {Promise<FingerprintData>} A promise that resolves to the cached or new fingerprint data.
+   */
   async getCachedFingerprint(): Promise<FingerprintData> {
     if (!this.cachedFingerprint) {
       this.cachedFingerprint = await this.generateFingerprint();

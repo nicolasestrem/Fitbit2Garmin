@@ -1,7 +1,13 @@
+/**
+ * @file Unit tests for the main RateLimiter class.
+ * @description This suite tests the high-level logic of the `RateLimiter`, including
+ * client ID extraction, file validation, and the creation of rate limit responses.
+ * It mocks the underlying multi-tier and fallback systems to focus on the top-level orchestration.
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RateLimiter } from '../../api/rate-limiter.js';
 
-describe('RateLimiter', () => {
+describe('RateLimiter Unit Tests', () => {
   let rateLimiter;
   let mockEnv;
 

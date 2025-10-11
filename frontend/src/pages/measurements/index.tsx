@@ -1,5 +1,8 @@
 /**
- * Main measurements page with tabs layout
+ * @file Main measurements page with a tabbed layout.
+ * This component acts as a container for all individual measurement pages.
+ * It uses React Router's `useParams` to determine which measurement to display
+ * and lazy-loads the corresponding page component.
  */
 
 import React, { Suspense } from 'react';
@@ -7,7 +10,11 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Tabs } from '../../components/ui/Tabs';
 import { getMeasurement, type MeasurementSlug } from '../../measurements';
 
-// Lazy load page components for code splitting
+/**
+ * A record mapping each measurement slug to its lazy-loaded page component.
+ * This enables code-splitting, so each page's code is only loaded when it's needed.
+ * @type {Record<MeasurementSlug, React.LazyExoticComponent<React.ComponentType<any>>>}
+ */
 const pageComponents: Record<MeasurementSlug, React.LazyExoticComponent<React.ComponentType<any>>> = {
   weight: React.lazy(() => import('./WeightPage')),
   'heart-rate': React.lazy(() => import('./HeartRatePage')),
@@ -17,6 +24,12 @@ const pageComponents: Record<MeasurementSlug, React.LazyExoticComponent<React.Co
   'blood-pressure': React.lazy(() => import('./BloodPressurePage')),
 };
 
+/**
+ * The main container component for all measurement pages.
+ * It provides a consistent layout with a header, tab navigation, and footer.
+ * The content of the page is determined by the URL parameter.
+ * @returns {React.ReactElement} The rendered measurements page layout.
+ */
 export default function MeasurementsPage() {
   const { measurement } = useParams();
   const currentSlug = measurement as MeasurementSlug;
@@ -31,6 +44,11 @@ export default function MeasurementsPage() {
   // Get the lazy-loaded page component
   const PageComponent = pageComponents[currentSlug];
 
+  /**
+   * Determines which page component to render based on the current slug.
+   * If the slug is invalid or the component doesn't exist, it redirects to the default page.
+   * @returns {React.ReactElement} The page component to render or a Navigate component.
+   */
   const getPageComponent = () => {
     if (!PageComponent) {
       return <Navigate to="/measurements/weight" replace />;

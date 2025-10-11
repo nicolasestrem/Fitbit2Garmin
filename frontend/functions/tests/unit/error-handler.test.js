@@ -1,3 +1,9 @@
+/**
+ * @file Unit tests for the enhanced error handling module.
+ * @description This suite tests the `AppError` class, error creation helper functions,
+ * and the `PartialFailureHandler` to ensure they behave as expected under various
+ * conditions, creating structured and predictable error responses.
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   AppError,
@@ -10,7 +16,7 @@ import {
   PartialFailureHandler
 } from '../../api/error-handler.js';
 
-describe('AppError', () => {
+describe('AppError Class', () => {
   it('should create error with proper structure', () => {
     const error = new AppError(ERROR_CODES.RATE_LIMIT_EXCEEDED, 'Test details', 429);
 

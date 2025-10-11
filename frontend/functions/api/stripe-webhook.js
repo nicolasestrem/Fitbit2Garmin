@@ -1,16 +1,19 @@
 /**
- * Stripe Webhook Endpoint
+ * @file Stripe Webhook Endpoint
+ * @description Cloudflare Pages Function for handling incoming Stripe webhook events.
+ * It verifies the event signature and processes relevant events like `checkout.session.completed`.
  * Route: POST /api/stripe-webhook
- *
- * Handles Stripe webhook events:
- * - checkout.session.completed: Create pass after successful payment
- * - charge.refunded: Revoke pass when refund is processed
  */
 
 import { StripeHandler } from './stripe-handler.js';
 
 /**
- * Handle Stripe webhook events
+ * Handles incoming Stripe webhook events.
+ * @param {object} context - The Cloudflare Pages request context.
+ * @param {Request} context.request - The incoming request object.
+ * @param {object} context.env - The environment variables and bindings.
+ * @returns {Promise<Response>} A promise that resolves to a Response object indicating
+ * the result of the webhook processing.
  */
 export async function onRequest(context) {
   const { request, env } = context;
@@ -21,12 +24,12 @@ export async function onRequest(context) {
     'Access-Control-Allow-Headers': 'Content-Type, Stripe-Signature'
   };
 
-  // Handle preflight
+  // Handle preflight (OPTIONS) requests for CORS.
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  // Only allow POST
+  // Ensure the request method is POST.
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
@@ -35,6 +38,7 @@ export async function onRequest(context) {
   }
 
   try {
+    // Stripe requires the raw request body to verify the signature.
     const signature = request.headers.get('stripe-signature');
     if (!signature) {
       return new Response(JSON.stringify({ error: 'Missing signature' }), {
@@ -43,25 +47,21 @@ export async function onRequest(context) {
       });
     }
 
-    // Get raw body for signature verification
     const payload = await request.text();
-
     const stripeHandler = new StripeHandler(env);
 
-    // Verify webhook signature
+    // Verify the webhook signature to ensure the request is from Stripe.
     const event = stripeHandler.verifyWebhookSignature(payload, signature);
 
-    // Process the event
+    // Process the verified event.
     const result = await stripeHandler.processWebhookEvent(event);
 
-    return new Response(JSON.stringify({
-      received: true,
-      ...result
-    }), {
+    return new Response(JSON.stringify({ received: true, ...result }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    // Log and return an error response if processing fails.
     console.error('Webhook processing error:', error);
     return new Response(JSON.stringify({
       error: 'Webhook processing failed',

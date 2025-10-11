@@ -1,17 +1,19 @@
 /**
- * Comprehensive SEO metadata generator for all pages
- * Includes: title, description, canonical, OpenGraph, Twitter Cards, and more
+ * @file Comprehensive SEO metadata generator for all pages.
+ * This utility creates and formats metadata for use with `react-helmet-async`,
+ * including title, description, canonical links, OpenGraph tags, and Twitter Cards.
  */
 
 import type { MeasurementSlug } from '../measurements';
 
+/**
+ * @interface SEOMetadata
+ * @description Defines the complete set of SEO metadata for a page.
+ */
 export interface SEOMetadata {
-  // Basic meta tags
   title: string;
   description: string;
   canonical: string;
-
-  // OpenGraph tags
   ogTitle: string;
   ogDescription: string;
   ogUrl: string;
@@ -19,22 +21,19 @@ export interface SEOMetadata {
   ogImage: string;
   ogImageAlt: string;
   ogSiteName: string;
-
-  // Twitter Card tags
   twitterCard: string;
   twitterTitle: string;
   twitterDescription: string;
   twitterImage: string;
   twitterImageAlt: string;
-
-  // Additional meta
   author?: string;
   keywords?: string;
   applicationName: string;
 }
 
 /**
- * Base metadata used across all pages
+ * @constant {object} BASE_METADATA
+ * @description Base metadata values that are consistent across all pages.
  */
 const BASE_METADATA = {
   ogSiteName: 'TrackerSync',
@@ -44,13 +43,17 @@ const BASE_METADATA = {
 };
 
 /**
- * Fallback OG image (1200x630px)
- * TODO: Create specific OG images for each measurement type
+ * @constant {string} FALLBACK_OG_IMAGE
+ * @description The default OpenGraph image (1200x630px) to be used when a specific one isn't available.
  */
 const FALLBACK_OG_IMAGE = 'https://trackersync.app/og-images/default-og.png';
 
 /**
- * Get SEO metadata for a measurement page
+ * Generates SEO metadata for a specific measurement page.
+ * @param {MeasurementSlug} slug - The slug of the measurement.
+ * @param {string} pageTitle - The title for the page.
+ * @param {string} pageDescription - The meta description for the page.
+ * @returns {SEOMetadata} The complete SEO metadata object for the page.
  */
 export function getMeasurementMetadata(
   slug: MeasurementSlug,
@@ -58,20 +61,14 @@ export function getMeasurementMetadata(
   pageDescription: string
 ): SEOMetadata {
   const url = `https://trackersync.app/measurements/${slug}`;
-  // Use fallback OG image until specific images are created
   const ogImage = FALLBACK_OG_IMAGE;
   const ogImageAlt = `TrackerSync - Convert Fitbit ${slug} to Garmin`;
-
-  // Generate keywords from slug
   const keywords = generateKeywords(slug);
 
   return {
-    // Basic meta
     title: pageTitle,
     description: pageDescription,
     canonical: url,
-
-    // OpenGraph
     ogTitle: pageTitle,
     ogDescription: pageDescription,
     ogUrl: url,
@@ -79,15 +76,11 @@ export function getMeasurementMetadata(
     ogImage: ogImage,
     ogImageAlt: ogImageAlt,
     ogSiteName: BASE_METADATA.ogSiteName,
-
-    // Twitter
     twitterCard: BASE_METADATA.twitterCard,
     twitterTitle: pageTitle,
     twitterDescription: pageDescription,
     twitterImage: ogImage,
     twitterImageAlt: ogImageAlt,
-
-    // Additional
     author: BASE_METADATA.author,
     keywords: keywords,
     applicationName: BASE_METADATA.applicationName
@@ -95,13 +88,13 @@ export function getMeasurementMetadata(
 }
 
 /**
- * Get SEO metadata for the home page
+ * Generates SEO metadata for the home page.
+ * @returns {SEOMetadata} The complete SEO metadata object for the home page.
  */
 export function getHomeMetadata(): SEOMetadata {
   const title = 'Free Fitbit to Garmin Converter | Google Takeout to FIT Files';
   const description = 'Convert Fitbit data to Garmin in seconds. Free tool transforms Google Takeout JSON to .FIT files. Weight, heart rate, sleep, steps & more. No signup required.';
   const url = 'https://trackersync.app';
-  // Use fallback OG image until homepage image is created
   const ogImage = FALLBACK_OG_IMAGE;
   const keywords = 'fitbit to garmin, fitbit converter, google takeout, fit file converter, fitbit export, garmin import, health data migration, fitness tracker switch';
 
@@ -128,7 +121,9 @@ export function getHomeMetadata(): SEOMetadata {
 }
 
 /**
- * Generate keywords based on measurement slug
+ * Generates a string of relevant keywords for a measurement page.
+ * @param {MeasurementSlug} slug - The slug of the measurement.
+ * @returns {string} A comma-separated string of keywords.
  */
 function generateKeywords(slug: MeasurementSlug): string {
   const baseKeywords = 'fitbit to garmin, fitbit converter, google takeout, fit file, garmin connect, data migration, fitness tracker, health data transfer, wearable data sync, fitness data export';
@@ -146,8 +141,9 @@ function generateKeywords(slug: MeasurementSlug): string {
 }
 
 /**
- * Format metadata for react-helmet-async
- * Returns arrays of meta tag objects
+ * Formats the SEOMetadata object into a structure compatible with `react-helmet-async`.
+ * @param {SEOMetadata} metadata - The metadata object to format.
+ * @returns {{title: string, link: Array<object>, meta: Array<object>}} An object containing title, link, and meta tags for the helmet.
  */
 export function formatMetadataForHelmet(metadata: SEOMetadata) {
   return {
@@ -156,7 +152,6 @@ export function formatMetadataForHelmet(metadata: SEOMetadata) {
       { rel: 'canonical', href: metadata.canonical }
     ],
     meta: [
-      // Basic meta tags
       { name: 'description', content: metadata.description },
       { name: 'author', content: metadata.author },
       { name: 'keywords', content: metadata.keywords },

@@ -1,43 +1,48 @@
 /**
- * FIT file converter using Garmin's official JavaScript SDK
- * Mirrors the exact logic from backend/converter.py
- *
- * This implementation uses the official @garmin/fitsdk to ensure
- * proper binary format, CRC calculations, and message structure.
+ * @file FIT file converter using Garmin's official JavaScript SDK.
+ * @description This module handles the conversion of Fitbit weight data from JSON format
+ * to Garmin's binary FIT format. It uses the `@garmin/fitsdk` to ensure the output
+ * is compliant and can be imported into Garmin Connect.
  */
 
-// Defer importing the Garmin FIT SDK until runtime to avoid build-time ESM/CJS issues
+// Lazily import the Garmin FIT SDK to handle potential ESM/CJS compatibility issues at build time.
 let MesgNum;
 let FitEncoder;
-let FitStream;
 
+/**
+ * Ensures that the Garmin FIT SDK modules are loaded before use.
+ * This is a one-time asynchronous operation.
+ * @throws {Error} If the SDK cannot be loaded.
+ */
 async function ensureFitSdk() {
-  if (MesgNum && FitEncoder && FitStream) return;
+  if (MesgNum && FitEncoder) return;
   const mod = await import('@garmin/fitsdk');
   const ns = mod.default ? mod.default : mod;
-  // Support both namespace and named exports
   const Profile = ns.Profile || mod.Profile;
   MesgNum = Profile?.MesgNum || (Profile && Profile.MesgNum);
   FitEncoder = ns.Encoder || mod.Encoder;
-  FitStream = ns.Stream || mod.Stream;
-  if (!MesgNum || !FitEncoder || !FitStream) {
+  if (!MesgNum || !FitEncoder) {
     throw new Error('Garmin FIT SDK not available in this environment');
   }
 }
 
+/**
+ * A class to handle the conversion of Fitbit data to FIT format.
+ */
 class FitbitConverter {
   constructor() {
     this.conversionCount = 0;
   }
 
   /**
-   * Detect weight unit from data sample - analyzes weight values to determine if kg or lbs
+   * Analyzes a sample of weight data to detect whether the unit is 'kg' or 'lbs'.
+   * @param {Array<object>} data - An array of weight entries from the JSON file.
+   * @returns {{unit: 'kg'|'lbs', confidence: string, reason: string, stats: object}} An object with the detected unit and analysis details.
    */
   detectWeightUnit(data) {
     if (!Array.isArray(data) || data.length === 0) {
       return { unit: 'lbs', confidence: 'unknown', reason: 'No data available' };
     }
-
     const weights = data.map(entry => entry.weight).filter(w => typeof w === 'number' && w > 0);
     if (weights.length === 0) {
       return { unit: 'lbs', confidence: 'unknown', reason: 'No valid weight values' };
@@ -46,81 +51,57 @@ class FitbitConverter {
     const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
     const minWeight = Math.min(...weights);
     const maxWeight = Math.max(...weights);
+    const stats = { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length };
 
-    // Strong indicators for kg (most adult weights in kg are 40-200)
     if (maxWeight < 200 && avgWeight < 150) {
-      return {
-        unit: 'kg',
-        confidence: 'high',
-        reason: `Average weight ${avgWeight.toFixed(1)}, max ${maxWeight.toFixed(1)} suggest kg`,
-        stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
-      };
+      return { unit: 'kg', confidence: 'high', reason: `Average weight ${avgWeight.toFixed(1)}, max ${maxWeight.toFixed(1)} suggest kg`, stats };
     }
-
-    // Strong indicators for lbs (most adult weights in lbs are 90-500)
     if (minWeight > 90 && avgWeight > 150) {
-      return {
-        unit: 'lbs',
-        confidence: 'high',
-        reason: `Average weight ${avgWeight.toFixed(1)}, min ${minWeight.toFixed(1)} suggest lbs`,
-        stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
-      };
+      return { unit: 'lbs', confidence: 'high', reason: `Average weight ${avgWeight.toFixed(1)}, min ${minWeight.toFixed(1)} suggest lbs`, stats };
     }
-
-    // Ambiguous range (could be heavy person in kg or light person in lbs)
     if (avgWeight >= 150 && avgWeight <= 200) {
-      return {
-        unit: 'lbs',
-        confidence: 'medium',
-        reason: `Ambiguous range (avg ${avgWeight.toFixed(1)}), defaulting to lbs`,
-        stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
-      };
+      return { unit: 'lbs', confidence: 'medium', reason: `Ambiguous range (avg ${avgWeight.toFixed(1)}), defaulting to lbs`, stats };
     }
-
-    // Default to lbs for edge cases
-    return {
-      unit: 'lbs',
-      confidence: 'low',
-      reason: `Unclear pattern (avg ${avgWeight.toFixed(1)}), defaulting to lbs`,
-      stats: { min: minWeight, max: maxWeight, avg: avgWeight, count: weights.length }
-    };
+    return { unit: 'lbs', confidence: 'low', reason: `Unclear pattern (avg ${avgWeight.toFixed(1)}), defaulting to lbs`, stats };
   }
 
   /**
-   * Convert pounds to kilograms
+   * Converts a weight value from pounds to kilograms.
+   * @param {number} pounds - The weight in pounds.
+   * @returns {number} The weight in kilograms, rounded to one decimal place.
    */
   convertPoundsToKg(pounds) {
-    return Math.round((pounds / 2.2046) * 10) / 10; // Round to 1 decimal place
+    return Math.round((pounds / 2.2046) * 10) / 10;
   }
 
   /**
-   * Normalize weight to kg based on detected unit - replaces hardcoded pound conversion
+   * Normalizes a weight value to kilograms based on the detected unit.
+   * @param {number} weight - The weight value.
+   * @param {'kg'|'lbs'} detectedUnit - The detected unit of the weight.
+   * @returns {number} The weight in kilograms.
    */
   normalizeWeightToKg(weight, detectedUnit) {
     if (detectedUnit === 'kg') {
-      return Math.round(weight * 10) / 10; // Round to 1 decimal place
+      return Math.round(weight * 10) / 10;
     }
     return this.convertPoundsToKg(weight);
   }
 
   /**
-   * Extract week number from Google Takeout filename - exact same logic as Python
+   * Extracts the year and ISO week number from a Google Takeout filename (e.g., 'weight-2023-12-31.json').
+   * @param {string} filename - The input filename.
+   * @returns {string|null} The week and year string (e.g., '52-2023') or null if not found.
    */
   extractWeekYearFromFilename(filename) {
     try {
-      // Remove extension and split
       const baseName = filename.replace('.json', '');
       const parts = baseName.split('-');
-
       if (parts.length >= 4 && parts[0] === 'weight') {
         const year = parseInt(parts[1]);
         const month = parseInt(parts[2]);
         const day = parseInt(parts[3]);
-
-        // Calculate week number - using ISO week calculation
         const date = new Date(year, month - 1, day);
         const weekNumber = this.getISOWeekNumber(date);
-
         return `${weekNumber}-${year}`;
       }
     } catch (error) {
@@ -130,7 +111,9 @@ class FitbitConverter {
   }
 
   /**
-   * Get ISO week number - matching Python's isocalendar()[1]
+   * Calculates the ISO 8601 week number for a given date.
+   * @param {Date} date - The date object.
+   * @returns {number} The ISO week number.
    */
   getISOWeekNumber(date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -141,22 +124,22 @@ class FitbitConverter {
   }
 
   /**
-   * Validate Google Takeout format - exact same logic as Python
+   * Validates if the provided data matches the expected Google Takeout format for weight.
+   * @param {any} data - The parsed JSON data.
+   * @returns {boolean} True if the format is valid, otherwise false.
    */
   validateGoogleTakeoutFormat(data) {
-    if (!Array.isArray(data) || data.length === 0) {
-      return false;
-    }
-
-    // Check first entry for required fields
+    if (!Array.isArray(data) || data.length === 0) return false;
     const firstEntry = data[0];
     const requiredFields = ['logId', 'weight', 'date', 'time'];
-
     return requiredFields.every(field => field in firstEntry);
   }
 
   /**
-   * Process JSON data and return FIT file bytes - mirrors Python exactly
+   * Processes a single JSON file's data and converts it into a FIT file's byte array.
+   * @param {Array<object>} jsonData - The array of weight entries.
+   * @param {string} filename - The original filename, used for logging and naming.
+   * @returns {Promise<object>} An object containing the FIT file bytes, entry count, new filename, and unit detection details.
    */
   async processJsonData(jsonData, filename) {
     await ensureFitSdk();
@@ -164,96 +147,40 @@ class FitbitConverter {
       throw new Error('Invalid Google Takeout format. Expected weight data with logId, weight, date, time fields.');
     }
 
-    // Detect weight unit from the data
     const unitDetection = this.detectWeightUnit(jsonData);
     console.log(`Unit detection for ${filename}:`, unitDetection);
-
     if (unitDetection.confidence === 'low' || unitDetection.confidence === 'medium') {
       console.warn(`⚠️ ${unitDetection.reason}. If weights appear incorrect, your Fitbit data may be in a different unit than expected.`);
     }
 
-    // Get week number for filename
-    let weekYear = this.extractWeekYearFromFilename(filename);
-    if (!weekYear) {
-      // Fallback: use first entry date - exact same logic as Python
-      try {
-        const firstEntry = jsonData[0];
-        const dateParts = firstEntry.date.split('/');
-        const month = parseInt(dateParts[0]);
-        const day = parseInt(dateParts[1]);
-        const year = parseInt('20' + dateParts[2]); // Convert 24 to 2024
-        const dateObj = new Date(year, month - 1, day);
-        const weekNumber = this.getISOWeekNumber(dateObj);
-        weekYear = `${weekNumber}-${year}`;
-      } catch (error) {
-        weekYear = "1-2025"; // Default fallback
-      }
-    }
-
-    // Create FIT file encoder using official SDK (no streams; encoder returns Uint8Array)
     const encoder = new FitEncoder();
-
-    // Add File ID message - exact same logic as Python
     const firstTsMs = this.getUnixMs(jsonData[0]);
-    const fileIdMessage = {
-      mesgNum: MesgNum.FILE_ID,
-      type: 4, // WEIGHT file type
-      manufacturer: 255, // FITBIT_ID
-      product: 1,
-      serialNumber: 1701,
-      number: 0,
-      timeCreated: new Date(firstTsMs), // JS Date; SDK encodes to FIT time
-      productName: "Health Sync"
-    };
+    encoder.writeMesg({
+      mesgNum: MesgNum.FILE_ID, type: 4, manufacturer: 255, product: 1,
+      serialNumber: 1701, number: 0, timeCreated: new Date(firstTsMs), productName: "Health Sync"
+    });
 
-    encoder.writeMesg(fileIdMessage);
-
-    // Process each weight entry - exact same logic as Python
     const weightEntries = [];
     for (const entry of jsonData) {
       const tsMs = this.getUnixMs(entry);
-
-      // Convert weight to kg based on detected unit
       const weightKg = this.normalizeWeightToKg(entry.weight, unitDetection.unit);
-
-      // Get body fat percentage if available
       let bodyFat = entry.fat || 0.0;
-      if (bodyFat === 0.0) {
-        bodyFat = null;
-      } else {
-        bodyFat = Math.round(bodyFat * 10) / 10; // Round to 1 decimal
-      }
-
-      // Create weight scale message - CRITICAL: Field order must match template exactly
-      // The FIT profile defines the weight field with scale=100. The Garmin SDK does
-      // not automatically apply that scaling, so we store the integer representation
-      // (e.g. 88.7kg -> 8870) to ensure Garmin displays the expected value.
+      bodyFat = (bodyFat === 0.0) ? null : Math.round(bodyFat * 10) / 10;
       const weightScaled = Math.round(weightKg * 100);
 
-      const weightMsg = {
-        mesgNum: MesgNum.WEIGHT_SCALE,
-        timestamp: new Date(tsMs),
-        weight: weightScaled,
-        boneMass: 0.0,
-        muscleMass: 0.0,
-        percentHydration: 0.0,
+      weightEntries.push({
+        mesgNum: MesgNum.WEIGHT_SCALE, timestamp: new Date(tsMs), weight: weightScaled,
+        boneMass: 0.0, muscleMass: 0.0, percentHydration: 0.0,
         ...(bodyFat !== null ? { percentFat: bodyFat } : {})
-      };
-
-      weightEntries.push(weightMsg);
+      });
     }
 
-    // Sort entries by timestamp
     weightEntries.sort((a, b) => a.timestamp - b.timestamp);
-
-    // Add all weight entries
     for (const weightMsg of weightEntries) {
       encoder.writeMesg(weightMsg);
     }
 
-    // Close the encoder to finalize the file and get bytes
     const fitBytes = encoder.close();
-
     this.conversionCount++;
 
     return {
@@ -269,12 +196,16 @@ class FitbitConverter {
     };
   }
 
+  /**
+   * Gets a Unix timestamp in milliseconds from a weight entry.
+   * It prioritizes the `logId` field if it's a valid timestamp, otherwise falls back to parsing `date` and `time`.
+   * @param {object} entry - The weight entry object.
+   * @returns {number} The Unix timestamp in milliseconds.
+   */
   getUnixMs(entry) {
-    // Prefer explicit logId if present and looks like ms since epoch
     if (entry?.logId && typeof entry.logId === 'number' && entry.logId > 1e12) {
       return entry.logId;
     }
-    // Fallback: parse date/time fields (MM/DD/YY and HH:MM:SS)
     try {
       const { date, time } = entry;
       const parts = date.split('/');
@@ -282,29 +213,28 @@ class FitbitConverter {
       const month = Number(parts[0]);
       const day = Number(parts[1]);
       const [hh, mm, ss] = (time || '00:00:00').split(':').map(Number);
-      const dt = new Date(Date.UTC(year, month - 1, day, hh, mm, ss));
-      return dt.getTime();
+      return new Date(Date.UTC(year, month - 1, day, hh, mm, ss)).getTime();
     } catch {
-      // As a last resort, use now
       return Date.now();
     }
   }
 
   /**
-   * Generate output filename - exact same logic as Python
+   * Generates a descriptive output filename for the FIT file.
+   * @param {string} inputFilename - The original JSON filename.
+   * @returns {string} The generated FIT filename.
    */
   getOutputFilename(inputFilename) {
     const weekYear = this.extractWeekYearFromFilename(inputFilename);
-    if (weekYear) {
-      return `Weight ${weekYear} Fitbit.fit`;
-    }
-    return 'Weight Converted Fitbit.fit';
+    return weekYear ? `Weight ${weekYear} Fitbit.fit` : 'Weight Converted Fitbit.fit';
   }
 }
 
 /**
- * Convert multiple Fitbit JSON files to Garmin FIT format
- * This mirrors convert_fitbit_to_garmin() from Python exactly
+ * Converts an array of Fitbit JSON file data into an array of Garmin FIT files.
+ * @param {Array<[string, Array<object>]>} jsonFiles - An array of tuples, where each tuple contains a filename and its parsed JSON data.
+ * @returns {Promise<Array<[string, Uint8Array, object]>>} A promise that resolves to an array of tuples,
+ * each containing the new filename, the FIT file as a Uint8Array, and the unit detection info.
  */
 async function convertFitbitToGarmin(jsonFiles) {
   const converter = new FitbitConverter();
@@ -314,7 +244,6 @@ async function convertFitbitToGarmin(jsonFiles) {
     try {
       const result = await converter.processJsonData(jsonData, filename);
       results.push([result.filename, result.fitBytes, result.unitDetection]);
-
       console.log(`Converted ${filename}: ${result.entryCount} weight entries → ${result.filename}`);
       console.log(`  Unit detected: ${result.unitDetection.detectedUnit} (${result.unitDetection.confidence} confidence)`);
       console.log(`  Reason: ${result.unitDetection.reason}`);

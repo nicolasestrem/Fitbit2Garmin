@@ -1,15 +1,28 @@
 /**
- * Pass Status - Displays active pass information
- * Shows expiration time and pass type for premium users
+ * @file Pass Status - Displays active pass information.
+ * This component fetches and displays the user's current pass status,
+ * indicating whether they are on a free or premium tier.
  */
 
 import React, { useState, useEffect } from 'react';
 import { getPassStatus, type PassStatus as PassStatusType } from '../services/payment';
 
+/**
+ * @interface PassStatusProps
+ * @description Props for the PassStatus component.
+ * @property {() => void} [onUpgradeClick] - Optional callback function to be called when the upgrade button is clicked.
+ */
 interface PassStatusProps {
   onUpgradeClick?: () => void;
 }
 
+/**
+ * A React component that displays the user's current pass status.
+ * It shows whether the user has a free or premium pass and provides
+ * an option to upgrade.
+ * @param {PassStatusProps} props - The component props.
+ * @returns {React.ReactElement | null} The rendered component, or null if status is not available.
+ */
 export function PassStatus({ onUpgradeClick }: PassStatusProps) {
   const [passStatus, setPassStatus] = useState<PassStatusType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,6 +34,9 @@ export function PassStatus({ onUpgradeClick }: PassStatusProps) {
     return () => clearInterval(interval);
   }, []);
 
+  /**
+   * Fetches the pass status from the payment service and updates the component's state.
+   */
   const loadPassStatus = async () => {
     try {
       const status = await getPassStatus();

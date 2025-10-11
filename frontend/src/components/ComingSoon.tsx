@@ -1,5 +1,7 @@
 /**
- * Reusable "Coming Soon" component for measurement pages
+ * @file Reusable "Coming Soon" component for measurement pages.
+ * This component renders a landing page for features that are planned but not yet implemented.
+ * It dynamically generates SEO metadata, structured data, and content based on the measurement type.
  */
 
 import React from 'react';
@@ -10,14 +12,26 @@ import { getMeasurementMetadata, formatMetadataForHelmet } from '../utils/seoMet
 import { getAllStructuredData } from '../utils/structuredData';
 import type { MeasurementSlug } from '../measurements';
 
+/**
+ * @interface ComingSoonProps
+ * @description Props for the ComingSoon component.
+ * @property {MeasurementSlug} measurementSlug - The slug of the measurement to display the page for.
+ */
 interface ComingSoonProps {
   measurementSlug: MeasurementSlug;
 }
 
+/**
+ * A React component that displays a "Coming Soon" page for a given measurement type.
+ * It handles SEO, structured data, and provides information about the upcoming feature.
+ * @param {ComingSoonProps} props - The component props.
+ * @param {MeasurementSlug} props.measurementSlug - The slug for the measurement.
+ * @returns {React.ReactElement} The rendered "Coming Soon" page.
+ */
 export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
   const seoContent = getSeoCopy(measurementSlug);
 
-  // Get measurement label for structured data
+  // A map to get the display label for a measurement slug.
   const measurementLabels: Record<MeasurementSlug, string> = {
     'weight': 'Weight',
     'heart-rate': 'Heart Rate',
@@ -32,7 +46,12 @@ export const ComingSoon: React.FC<ComingSoonProps> = ({ measurementSlug }) => {
   const helmetMetadata = formatMetadataForHelmet(metadata);
   const structuredData = getAllStructuredData(measurementSlug, measurementLabel, seoContent.faq);
 
-  // Generate example filename for the measurement
+  /**
+   * Generates an example filename for the given measurement slug.
+   * This is used to show users what kind of file to expect.
+   * @param {MeasurementSlug} slug - The measurement slug.
+   * @returns {string} The example filename.
+   */
   const getExampleFilename = (slug: MeasurementSlug): string => {
     const filenameMap: Record<MeasurementSlug, string> = {
       'weight': 'weight-2024-01-15.json',

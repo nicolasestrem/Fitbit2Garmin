@@ -1,9 +1,14 @@
 /**
- * Google Analytics 4 utility functions
- * Provides type-safe wrappers for gtag functions
+ * @file Google Analytics 4 utility functions.
+ * This file provides type-safe wrappers for sending events to Google Analytics (GA4)
+ * using the `gtag.js` library.
  */
 
 declare global {
+  /**
+   * Extends the global Window interface to include `gtag` and `dataLayer`
+   * for Google Analytics integration.
+   */
   interface Window {
     gtag: (
       command: 'config' | 'event' | 'js' | 'consent',
@@ -15,7 +20,13 @@ declare global {
 }
 
 /**
- * Track custom events in Google Analytics
+ * Tracks a custom event in Google Analytics. This is a generic event tracking function.
+ * @param {string} eventName - The name of the event to track.
+ * @param {object} [parameters] - Optional parameters to send with the event.
+ * @param {string} [parameters.event_category] - The category of the event.
+ * @param {string} [parameters.event_label] - The label for the event.
+ * @param {number} [parameters.value] - A numerical value associated with the event.
+ * @returns {void}
  */
 export function trackEvent(
   eventName: string,
@@ -32,7 +43,10 @@ export function trackEvent(
 }
 
 /**
- * Track file conversion events
+ * Tracks a file conversion event.
+ * @param {'weight' | 'heart-rate' | 'other'} conversionType - The type of data being converted.
+ * @param {number} [fileSize] - The size of the file in bytes, to be used as the event value.
+ * @returns {void}
  */
 export function trackFileConversion(
   conversionType: 'weight' | 'heart-rate' | 'other',
@@ -47,7 +61,10 @@ export function trackFileConversion(
 }
 
 /**
- * Track page views (for SPA navigation)
+ * Tracks a page view, typically for Single Page Application (SPA) navigation changes.
+ * @param {string} pageTitle - The title of the page being viewed.
+ * @param {string} pagePath - The path of the page being viewed (e.g., '/measurements/weight').
+ * @returns {void}
  */
 export function trackPageView(pageTitle: string, pagePath: string): void {
   if (typeof window !== 'undefined' && window.gtag) {
@@ -60,7 +77,10 @@ export function trackPageView(pageTitle: string, pagePath: string): void {
 }
 
 /**
- * Track download events
+ * Tracks a file download event.
+ * @param {string} fileName - The name of the downloaded file.
+ * @param {string} fileType - The type or extension of the file (e.g., '.fit').
+ * @returns {void}
  */
 export function trackDownload(fileName: string, fileType: string): void {
   trackEvent('file_download', {
@@ -72,7 +92,11 @@ export function trackDownload(fileName: string, fileType: string): void {
 }
 
 /**
- * Track user interactions
+ * Tracks a generic user interaction, such as a button click.
+ * @param {string} action - The action performed by the user (e.g., 'click').
+ * @param {string} target - The UI element or component that was interacted with (e.g., 'ConvertButton').
+ * @param {number} [value] - An optional numerical value for the interaction.
+ * @returns {void}
  */
 export function trackUserInteraction(
   action: string,

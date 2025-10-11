@@ -1,13 +1,21 @@
 /**
- * Create Stripe Checkout Session Endpoint
- * Route: POST /api/create-checkout-session
+ * @file Create Stripe Checkout Session Endpoint
+ * @description Cloudflare Pages Function for creating a Stripe checkout session.
+ * Handles POST requests to `/api/create-checkout-session`.
  */
 
 import { StripeHandler } from './stripe-handler.js';
 import { RateLimiter } from './rate-limiter.js';
 
 /**
- * Handle checkout session creation requests
+ * Handles requests to create a Stripe checkout session.
+ * It validates the request, checks rate limits, and then calls the Stripe handler
+ * to create a session, returning the session URL to the client.
+ * @param {object} context - The Cloudflare Pages request context.
+ * @param {Request} context.request - The incoming request object.
+ * @param {object} context.env - The environment variables and bindings.
+ * @returns {Promise<Response>} A promise that resolves to a Response object with the
+ * checkout session details or an error.
  */
 export async function onRequest(context) {
   const { request, env } = context;
@@ -18,12 +26,12 @@ export async function onRequest(context) {
     'Access-Control-Allow-Headers': 'Content-Type'
   };
 
-  // Handle preflight
+  // Handle preflight (OPTIONS) requests for CORS.
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  // Only allow POST
+  // Ensure the request method is POST.
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
@@ -32,8 +40,10 @@ export async function onRequest(context) {
   }
 
   try {
+    // Parse the pass type from the request body.
     const { passType } = await request.json();
 
+    // Validate the pass type. It must be either '24h' or '7d'.
     if (!passType || !['24h', '7d'].includes(passType)) {
       return new Response(JSON.stringify({
         error: 'Invalid pass type',
@@ -44,11 +54,11 @@ export async function onRequest(context) {
       });
     }
 
-    // Get client ID (IP address)
+    // Initialize services for rate limiting and Stripe.
     const rateLimiter = new RateLimiter(env);
     const clientId = rateLimiter.getClientId(request);
 
-    // Check rate limit for checkout session creation
+    // Check rate limit for checkout session creation to prevent abuse.
     // TODO P3: Add dedicated checkout rate limit (5 sessions per hour)
     const checkoutLimit = await rateLimiter.checkRateLimit(request, 'suspicious');
     if (checkoutLimit?.rateLimited) {
@@ -61,10 +71,11 @@ export async function onRequest(context) {
       });
     }
 
-    // Create checkout session
+    // Initialize the Stripe handler and determine the redirect URLs.
     const stripeHandler = new StripeHandler(env);
     const origin = new URL(request.url).origin;
 
+    // Create the checkout session with Stripe.
     const session = await stripeHandler.createCheckoutSession(
       passType,
       clientId,
@@ -72,6 +83,7 @@ export async function onRequest(context) {
       `${origin}?payment_canceled=true`
     );
 
+    // Return the session details to the client for redirection.
     return new Response(JSON.stringify({
       sessionId: session.sessionId,
       url: session.url
@@ -80,6 +92,7 @@ export async function onRequest(context) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    // Log and return a generic error response if something goes wrong.
     console.error('Checkout session creation error:', error);
     return new Response(JSON.stringify({
       error: 'Failed to create checkout session',

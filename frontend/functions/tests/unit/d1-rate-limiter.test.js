@@ -1,8 +1,14 @@
+/**
+ * @file Unit tests for the D1RateLimiter class.
+ * @description This test suite uses `vitest` to mock the D1 database and KV
+ * dependencies, allowing for isolated testing of the rate limiter's logic,
+ * including its atomic operations, reputation adjustments, and cleanup procedures.
+ */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { D1RateLimiter } from '../../api/d1-rate-limiter.js';
 import { AppError } from '../../api/error-handler.js';
 
-describe('D1RateLimiter', () => {
+describe('D1RateLimiter Unit Tests', () => {
   let rateLimiter;
   let mockD1;
   let mockKV;

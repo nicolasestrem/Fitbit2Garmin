@@ -1,5 +1,8 @@
 /**
- * Weight measurement page - extracted from original App.tsx logic
+ * @file Weight measurement page.
+ * This is the main page for the weight data conversion feature. It handles file upload,
+ * validation, conversion, and download of the converted files. It also manages
+ * the UI state throughout this process.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -13,10 +16,17 @@ import { getSeoCopy } from '../../utils/seoCopy';
 import { getMeasurementMetadata, formatMetadataForHelmet } from '../../utils/seoMetadata';
 import { getAllStructuredData } from '../../utils/structuredData';
 
+/**
+ * @typedef {'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error' | 'partial_success'} AppState
+ * @description Represents the different states of the conversion process.
+ */
 type AppState = 'idle' | 'loading' | 'uploading' | 'validating' | 'converting' | 'completed' | 'error' | 'partial_success';
 
-const wait = (durationMs: number) => new Promise<void>((resolve) => setTimeout(resolve, durationMs));
-
+/**
+ * The main component for the Weight measurement page.
+ * It orchestrates the entire file conversion workflow, from file selection to download.
+ * @returns {React.ReactElement} The rendered weight page.
+ */
 export default function WeightPage() {
   const [state, setState] = useState<AppState>('idle');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -31,17 +41,27 @@ export default function WeightPage() {
   const helmetMetadata = formatMetadataForHelmet(metadata);
   const structuredData = getAllStructuredData('weight', 'Weight', seoContent.faq);
 
-  // Initialize fingerprint on component load
+  /**
+   * Effect hook for any one-time initialization logic.
+   * Currently, it's a placeholder for potential future use, like fingerprinting.
+   */
   useEffect(() => {
-    // Fingerprint initialization is commented out in original App.tsx
-    // Keeping the same structure for consistency
+    // Fingerprint initialization logic would go here.
   }, []);
 
+  /**
+   * Handles the selection of files from the FileUpload component.
+   * @param {File[]} files - The array of selected files.
+   */
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(files);
     setError('');
   };
 
+  /**
+   * Resets the application state to its initial 'idle' state.
+   * Clears out any previous conversion data, errors, and progress.
+   */
   const resetState = () => {
     setState('idle');
     setConversionResponse(null);
@@ -51,6 +71,11 @@ export default function WeightPage() {
     setRetryAfter(0);
   };
 
+  /**
+   * Handles the entire file conversion process.
+   * This includes uploading, validating, and converting the selected files.
+   * It updates the application state and progress along the way.
+   */
   const handleConvert = async () => {
     if (selectedFiles.length === 0) {
       setError('Please select files to convert.');
@@ -107,6 +132,10 @@ export default function WeightPage() {
     }
   };
 
+  /**
+   * A boolean flag indicating whether the conversion can be started.
+   * @type {boolean}
+   */
   const canConvert = selectedFiles.length > 0 && state === 'idle';
 
   return (

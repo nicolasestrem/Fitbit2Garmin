@@ -1,5 +1,8 @@
 /**
- * File upload component with drag-and-drop support
+ * @file File upload component with drag-and-drop support.
+ * This component provides a user interface for selecting local files,
+ * including a drag-and-drop area and a file list. It also integrates
+ * with a payment/pass system to control usage limits.
  */
 
 import React, { useCallback, useState, useEffect } from 'react';
@@ -8,12 +11,26 @@ import { CloudArrowUpIcon, DocumentIcon, XMarkIcon } from '@heroicons/react/24/o
 import { PassStatus } from './PassStatus';
 import { UpgradeModal } from './UpgradeModal';
 
+/**
+ * @interface FileUploadProps
+ * @description Props for the FileUpload component.
+ * @property {(files: File[]) => void} onFilesSelected - Callback function invoked when files are selected or removed.
+ * @property {number} [maxFiles=3] - The maximum number of files allowed.
+ * @property {boolean} [disabled=false] - If true, the file upload functionality is disabled.
+ */
 interface FileUploadProps {
   onFilesSelected: (files: File[]) => void;
   maxFiles?: number;
   disabled?: boolean;
 }
 
+/**
+ * A React component that provides a UI for file uploading, including drag-and-drop.
+ * It manages the list of selected files, enforces file limits, and integrates with
+ * a pass system for feature access.
+ * @param {FileUploadProps} props - The component props.
+ * @returns {React.ReactElement} The rendered file upload component.
+ */
 export const FileUpload: React.FC<FileUploadProps> = ({
   onFilesSelected,
   maxFiles = 3,
@@ -22,7 +39,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // Handle Stripe redirect (success/cancel)
+  /**
+   * Effect hook to handle redirects from a Stripe payment flow.
+   * It checks for `payment_success` or `payment_canceled` query parameters
+   * and displays a message accordingly.
+   */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const success = params.get('payment_success');
@@ -39,6 +60,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     }
   }, []);
 
+  /**
+   * Callback for the `react-dropzone` hook.
+   * It is called when files are dropped or selected. It validates the file count
+   * and updates the state.
+   * @param {File[]} acceptedFiles - The files accepted by the dropzone.
+   */
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length + selectedFiles.length > maxFiles) {
       alert(`Maximum ${maxFiles} files allowed`);
@@ -50,6 +77,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     onFilesSelected(newFiles);
   }, [selectedFiles, maxFiles, onFilesSelected]);
 
+  /**
+   * Removes a specific file from the list of selected files.
+   * @param {File} fileToRemove - The file to be removed.
+   */
   const removeFile = (fileToRemove: File) => {
     const newFiles = selectedFiles.filter(file => file !== fileToRemove);
     setSelectedFiles(newFiles);

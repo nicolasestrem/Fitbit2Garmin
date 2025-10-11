@@ -1,8 +1,15 @@
+/**
+ * @file Unit tests for the IntelligentFallback class.
+ * @description This suite tests the system's ability to gracefully handle component
+ * failures. It uses mocks to simulate unhealthy components (D1, KV, R2) and
+ * verifies that the system correctly falls back to the next available strategy,
+ * from the multi-tier limiter down to an in-memory solution.
+ */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { IntelligentFallback } from '../../api/intelligent-fallback.js';
 import { AppError } from '../../api/error-handler.js';
 
-describe('IntelligentFallback', () => {
+describe('IntelligentFallback Unit Tests', () => {
   let fallback;
   let mockEnv;
   let mockPrimaryLimiter;

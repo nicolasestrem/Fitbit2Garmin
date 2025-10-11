@@ -1,13 +1,23 @@
 /**
- * Durable Object for Atomic Rate Limiting
- *
- * Provides atomic rate limiting operations using Cloudflare Durable Objects
- * to eliminate race conditions and ensure accurate enforcement.
+ * @file Durable Object for Atomic Rate Limiting
+ * @description This module defines a Cloudflare Durable Object (`RateLimitDO`) that provides
+ * atomic rate limiting operations. This approach prevents race conditions common in
+ * simple key-value store-based limiters, ensuring accurate enforcement. A helper class,
+ * `AtomicRateLimiter`, is also provided for easy interaction with the Durable Object.
  */
 
 import { AppError, ERROR_CODES } from './error-handler.js';
 
+/**
+ * A Cloudflare Durable Object that manages rate limit state for a specific client.
+ * Each instance of this object corresponds to a unique client ID.
+ */
 export class RateLimitDO {
+  /**
+   * Creates an instance of RateLimitDO.
+   * @param {DurableObjectState} state - The state object provided by the Cloudflare runtime, used for storage.
+   * @param {object} env - The environment object containing bindings.
+   */
   constructor(state, env) {
     this.state = state;
     this.env = env;
@@ -25,7 +35,10 @@ export class RateLimitDO {
   }
 
   /**
-   * Handle rate limiting requests
+   * The entry point for all requests to this Durable Object instance.
+   * It routes requests to the appropriate handler based on the URL path.
+   * @param {Request} request - The incoming request object.
+   * @returns {Promise<Response>} A promise that resolves to a Response object.
    */
   async fetch(request) {
     try {
@@ -49,7 +62,10 @@ export class RateLimitDO {
   }
 
   /**
-   * Check and update rate limit for a client
+   * Handles a 'check' request to check and update the rate limit for the client.
+   * @param {Request} request - The incoming request containing client and endpoint details.
+   * @returns {Promise<Response>} The result of the rate limit check.
+   * @private
    */
   async handleRateLimitCheck(request) {
     const { clientId, endpoint, timestamp } = await request.json();
@@ -72,7 +88,11 @@ export class RateLimitDO {
   }
 
   /**
-   * Reset rate limits for a client (admin function)
+   * Handles a 'reset' request to clear the rate limits for the client.
+   * This is intended for administrative use.
+   * @param {Request} request - The incoming request.
+   * @returns {Promise<Response>} A success response.
+   * @private
    */
   async handleReset(request) {
     const { clientId, endpoint } = await request.json();
@@ -96,7 +116,10 @@ export class RateLimitDO {
   }
 
   /**
-   * Get current rate limit status for a client
+   * Handles a 'status' request to get the current rate limit status for the client.
+   * @param {Request} request - The incoming request.
+   * @returns {Promise<Response>} A response containing the status of all configured endpoints.
+   * @private
    */
   async handleStatus(request) {
     const { clientId } = await request.json();
@@ -127,7 +150,14 @@ export class RateLimitDO {
   }
 
   /**
-   * Core rate limiting logic with atomic operations
+   * The core rate limiting logic. It checks the current request count against the limit
+   * in an atomic manner within the Durable Object's single-threaded execution model.
+   * @param {string} clientId - The client identifier.
+   * @param {string} endpoint - The endpoint being checked.
+   * @param {object} config - The configuration for the endpoint (max requests, window).
+   * @param {number} now - The current Unix timestamp.
+   * @returns {Promise<object>} The result of the rate limit check.
+   * @private
    */
   async checkRateLimit(clientId, endpoint, config, now) {
     const key = `${clientId}:${endpoint}`;
@@ -168,7 +198,10 @@ export class RateLimitDO {
   }
 
   /**
-   * Get bucket from memory cache or storage
+   * Retrieves a request bucket from the in-memory cache or durable storage.
+   * @param {string} key - The storage key for the bucket.
+   * @returns {Promise<object>} The request bucket.
+   * @private
    */
   async getBucket(key) {
     // Try memory cache first
@@ -195,7 +228,10 @@ export class RateLimitDO {
   }
 
   /**
-   * Save bucket to both memory cache and durable storage
+   * Saves a request bucket to both the in-memory cache and durable storage.
+   * @param {string} key - The storage key for the bucket.
+   * @param {object} bucket - The bucket data to save.
+   * @private
    */
   async saveBucket(key, bucket) {
     this.buckets.set(key, bucket);
@@ -203,7 +239,11 @@ export class RateLimitDO {
   }
 
   /**
-   * Remove expired requests from sliding window
+   * Removes expired request timestamps from a bucket based on the sliding window.
+   * @param {object} bucket - The request bucket.
+   * @param {object} config - The endpoint configuration.
+   * @param {number} now - The current Unix timestamp.
+   * @private
    */
   cleanExpiredRequests(bucket, config, now) {
     const windowStart = now - config.window;
@@ -220,7 +260,12 @@ export class RateLimitDO {
   }
 
   /**
-   * Get current request count within window
+   * Gets the current number of valid requests within the sliding window.
+   * @param {object} bucket - The request bucket.
+   * @param {object} config - The endpoint configuration.
+   * @param {number} now - The current Unix timestamp.
+   * @returns {number} The current request count.
+   * @private
    */
   getCurrentCount(bucket, config, now) {
     const windowStart = now - config.window;
@@ -228,7 +273,8 @@ export class RateLimitDO {
   }
 
   /**
-   * Handle alarm for periodic cleanup
+   * An alarm handler that runs periodically to clean up stale data from storage,
+   * preventing unbounded memory and storage growth.
    */
   async alarm() {
     try {
@@ -259,15 +305,24 @@ export class RateLimitDO {
 }
 
 /**
- * Helper class for interacting with RateLimitDO from other parts of the application
+ * A helper class that provides a simple interface for interacting with the RateLimitDO
+ * from other parts of the application, such as the main API router.
  */
 export class AtomicRateLimiter {
+  /**
+   * Creates an instance of AtomicRateLimiter.
+   * @param {object} env - The Cloudflare environment object containing the DO binding.
+   */
   constructor(env) {
     this.env = env;
   }
 
   /**
-   * Check rate limit for a client using Durable Object
+   * Checks the rate limit for a client by calling the appropriate Durable Object instance.
+   * @param {string} clientId - The client identifier.
+   * @param {string} endpoint - The endpoint being accessed.
+   * @returns {Promise<object>} The result of the rate limit check.
+   * @throws {AppError} If the rate limit is exceeded.
    */
   async checkRateLimit(clientId, endpoint, files = []) {
     try {
@@ -318,7 +373,9 @@ export class AtomicRateLimiter {
   }
 
   /**
-   * Get rate limit status for a client
+   * Gets the current rate limit status for a client from its Durable Object.
+   * @param {string} clientId - The client identifier.
+   * @returns {Promise<object>} The rate limit status for the client.
    */
   async getStatus(clientId) {
     try {
@@ -339,7 +396,10 @@ export class AtomicRateLimiter {
   }
 
   /**
-   * Reset rate limits for a client (admin function)
+   * Resets the rate limits for a client by calling its Durable Object.
+   * @param {string} clientId - The client identifier.
+   * @param {string|null} [endpoint=null] - The specific endpoint to reset, or all if null.
+   * @returns {Promise<object>} The result of the reset operation.
    */
   async resetLimits(clientId, endpoint = null) {
     try {

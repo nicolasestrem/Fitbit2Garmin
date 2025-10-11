@@ -1,5 +1,13 @@
+/**
+ * @file Unit tests for the FIT converter module.
+ * @description This suite tests the core logic of the `fit-converter.js` module,
+ * particularly its ability to correctly encode weight data into the Garmin FIT format.
+ * It uses `vitest` to mock the `@garmin/fitsdk` dependency, allowing for verification
+ * of the output messages without relying on the actual SDK.
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Mock the Garmin FIT SDK to isolate the converter logic for testing.
 vi.mock('@garmin/fitsdk', () => {
   const messages = [];
 
@@ -42,7 +50,7 @@ vi.mock('@garmin/fitsdk', () => {
 import { convertFitbitToGarmin } from '../../api/fit-converter';
 import { __getWrittenMessages, __resetMessages } from '@garmin/fitsdk';
 
-describe('fit-converter weight encoding', () => {
+describe('fit-converter weight encoding tests', () => {
   beforeEach(() => {
     __resetMessages();
   });
