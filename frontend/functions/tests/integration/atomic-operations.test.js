@@ -1,9 +1,20 @@
+/**
+ * @file Integration tests for atomic operations and system resilience.
+ * @description This suite tests the coordination between different storage tiers (D1, KV)
+ * under various failure scenarios to ensure that the system maintains data consistency
+ * and gracefully degrades its functionality.
+ */
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MultiTierRateLimiter } from '../../api/multi-tier-rate-limiter.js';
 import { IntelligentFallback } from '../../api/intelligent-fallback.js';
 import { AppError } from '../../api/error-handler.js';
 
-// A more robust, stateful mock for D1
+/**
+ * Creates a stateful mock of a Cloudflare D1 database instance.
+ * This mock allows for testing of database interactions without a live D1 environment.
+ * @returns {object} A mocked D1 database object with spies for methods like `prepare`, `bind`, and `run`.
+ */
 const createMockD1Database = () => ({
     prepare: vi.fn().mockReturnThis(),
     bind: vi.fn().mockReturnThis(),
@@ -19,7 +30,12 @@ const createMockD1Database = () => ({
     }),
   });
 
-  // A more robust, stateful mock for KV
+  /**
+ * Creates a stateful mock of a Cloudflare KV namespace.
+ * This mock simulates the get, put, and delete operations of a real KV store,
+ * allowing for testing of caching and other KV-dependent logic.
+ * @returns {object} A mocked KV namespace object with spies for its methods.
+ */
   const createMockKV = () => {
     const store = new Map();
     return {

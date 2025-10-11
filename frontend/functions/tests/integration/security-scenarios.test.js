@@ -1,3 +1,11 @@
+/**
+ * @file Integration tests for various security scenarios.
+ * @description This suite tests the API's resilience against common security threats,
+ * including directory traversal, XSS, SQL injection, DoS attacks (e.g., JSON bombs),
+ * and prototype pollution. It ensures that malicious inputs are handled gracefully
+ * without compromising the system.
+ */
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { onRequest } from '../../api/[[path]].js';
 

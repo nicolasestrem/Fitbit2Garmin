@@ -8,14 +8,14 @@ import { StripeHandler } from './stripe-handler.js';
 import { RateLimiter } from './rate-limiter.js';
 
 /**
- * Handles requests to create a Stripe checkout session.
- * It validates the request, checks rate limits, and then calls the Stripe handler
- * to create a session, returning the session URL to the client.
+ * Handles incoming requests to create a Stripe checkout session.
+ * It validates the request body for a valid pass type, checks rate limits,
+ * and then calls the Stripe handler to create a new session.
  * @param {object} context - The Cloudflare Pages request context.
  * @param {Request} context.request - The incoming request object.
  * @param {object} context.env - The environment variables and bindings.
- * @returns {Promise<Response>} A promise that resolves to a Response object with the
- * checkout session details or an error.
+ * @returns {Promise<Response>} A promise that resolves to a Response object containing
+ * the checkout session URL or an error message.
  */
 export async function onRequest(context) {
   const { request, env } = context;
