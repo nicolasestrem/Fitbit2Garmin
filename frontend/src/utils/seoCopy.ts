@@ -262,11 +262,10 @@ const contentMap: Record<MeasurementSlug, SEOContent> = {
  * @returns {SEOContent} The complete set of SEO and page content for the given slug.
  */
 export function getSeoCopy(slug: string): SEOContent {
-  const validSlugs: MeasurementSlug[] = ['weight', 'heart-rate', 'steps', 'sleep', 'vo2max', 'blood-pressure'];
-  if (!validSlugs.includes(slug as MeasurementSlug)) {
-    return defaultSEOContent;
+  if (slug in contentMap) {
+    return contentMap[slug as MeasurementSlug];
   }
-  return contentMap[slug as MeasurementSlug];
+  return defaultSEOContent;
 }
 
 /**
